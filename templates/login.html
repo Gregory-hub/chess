@@ -1,0 +1,18 @@
+{% extends "layout.html" %}
+{% block content %}
+<form method="POST" action="{{ url_for('login') }}" class="login-form">
+    {{ form.hidden_tag() }}
+    {% for field in form if not 'hidden' in field.flags %}
+        <div class="form-group">
+            {{ field.label(class='label') if field.type != 'SubmitField' }}
+            {{ field(class='field') }}
+            <ul>
+                {% for error in field.errors %}
+                    <li class="error">{{ error }}</li>
+                {% endfor %}
+            </ul>
+        </div>
+    {% endfor %}
+</form>
+<div class="redirect-to-login">Don't have an account? <a href="{{ url_for('register') }}" class="login-link">Register</a></div>
+{% endblock content %}

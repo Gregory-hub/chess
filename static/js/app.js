@@ -1,4 +1,23 @@
-document.getElementById('but1').onclick = function(){
-    document.getElementById('block_f').style.display = "none";
-    document.getElementById('choosing_area').style.display = "block";
-};
+let socket = io(location.host)
+console.log(location.host)
+
+$('#logout').on('click', function() {
+    socket.disconnect()
+})
+
+$('button.invite_button').on('click', function() {
+    let username = this.id
+    game_data = {
+        '': '',
+    }
+    socket.emit('invite', username, game_data)
+    console.log('invite')
+})
+
+socket.on('error', function(message) {
+    $('#invitation_result').html(message)
+})
+
+socket.on('success', function(message) {
+    $('#invitation_result').html(message)
+})

@@ -1,0 +1,16 @@
+{% extends "layout.html" %}
+
+{% block content %}
+
+<br><br>
+<div class="row">
+    <div class="col-10">
+        {{ user }}
+    </div>
+    <div class="col">
+        <a href={{ url_for('game_config') }} type="button" id="{{ user.username }}" class="btn btn-light">Invite</a>
+    </div>
+    <div class='col' id="invitation_result"></div>
+</div>
+
+{% endblock content %}

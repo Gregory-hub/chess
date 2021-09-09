@@ -1,10 +1,34 @@
 import re
 
-from flask_login import login_user
-from wtforms.validators import ValidationError
+from flask import request
+from flask_login import login_user, current_user
 
 from chess.models import db, User
-from chess import hasher
+from chess import hasher, clients
+
+
+class Client:
+    def __init__(self, username: str, sid: str, user_agent: str):
+        self.username = username
+        self.sid = sid
+        self.user_agent = user_agent
+
+    def add(self):
+        clients.append(self)
+
+    def remove(self):
+        for client in clients:
+            if client == self:
+                clients.remove(client)
+
+    def __repr__(self):
+        return f'Client(username="{self.username}", sid="{self.sid}", user_agent="{self.user_agent}")'
+
+    def __eq__(self, other):
+        if not isinstance(other, Client):
+            return NotImplemented
+
+        return self.username == other.username and self.sid == other.sid and self.user_agent == other.user_agent
 
 
 def sign_up(form):
@@ -59,3 +83,18 @@ def get_user_from_username_or_email(username_or_email: str):
     else:
         user = User.query.filter(User.username == username_or_email).first()
     return user
+
+
+def get_current_client():
+    if not current_user.is_authenticated:
+        return None
+    username = current_user.username
+    sid = request.sid
+    return Client(username, sid, request.headers.get('User-Agent'))
+
+
+def get_client_by_username(username: str):
+    for client in clients:
+        if client.username == username:
+            return client
+    return None

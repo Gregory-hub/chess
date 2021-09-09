@@ -1,12 +1,10 @@
 body{
     margin: 0;
     padding: 0;
-    color:#000000;
-    font-size:15px;
-    font-family: "Noto Sans";
+    color: #5C4033;
 }
 
-/*Header                            */
+/* Header */
 .title{
     text-align: center;
     margin-top: 20px;
@@ -17,38 +15,41 @@ body{
     font-weight: bold;
 }
 
-/* Area                              */
+/* Area */
 .b_area{
     margin-top: 200px;
     text-align: center;
 }
 
 .button__class{
-    padding: 20px;
-    min-width: 200px;
-    background-color: #652d29;
+    height: 50px;
+    padding: 8px;
+    min-width: 160px;
+    background-color: #5C4033;
     color: white;
-    border-radius: 20px;
+    border-radius: 12px;
     outline: none;
     font-weight: bold;
     cursor: pointer;
     transition: .5s;
     border:2px solid black;
 }
-.button__class:hover{
-    background-color: #ededf1;
-    color:#652d29;
-    border: 2px solid black;
 
+.button__class:hover{
+    background-color: white;
+    color: #5C4033;
+    border: 2px solid black;
 }
+
 .button_s{
     margin-top: 50px;
 }
+
 #block_f{
     display: block;
 }
 
-/*Area with block of button         */
+/* Area with block of button */
 #choosing_area{
     display: none;
  
@@ -72,6 +73,18 @@ body{
     margin-right: 10px;
 }
 
-.host__text{
-    margin-right: 10px;    
+.home {
+    margin-left: 20px;
+}
+
+.auth {
+    margin-right: 40px;
+}
+
+.form-select {
+    max-width: 800px;
+}
+
+.alert-text {
+    margin-left: 32px;
 }

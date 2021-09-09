@@ -36,6 +36,7 @@ class Player(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     player_id = db.Column(db.ForeignKey('user.id'), nullable=False)
     game_id = db.Column(db.ForeignKey('game.id'), nullable=False)
+    color = db.Column(db.String(5), nullable=False)
 
     def __repr__(self):
         return f'Player(player_id={self.player_id}, game_id={self.game_id})'

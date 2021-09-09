@@ -1,10 +1,7 @@
 {% extends "layout.html" %}
 
-{% block link %}
-    {{ url_for('static', filename='css/style.css') }}
-{% endblock link %}
-
 {% block content %}
+
     <header>
         <div class="title">
             <div class="title__text">Chess</div>
@@ -12,43 +9,24 @@
     </header>
     <div id="block_f" class="b_area">
         <div class="button">
-            <div class="button_f">
-                <button id="but1" class="button__class" type="button">Play the game</button>
-            </div>
+            <button id="but1" type="button" class="button__class btn btn-primary btn-lg">Play</button>
         </div>
     </div>
     <div id="choosing_area" class="area_button">
-       <form method="POST" action={{ url_for('create_game') }}>
-            <div class="area_button__time">
-                <div class="time__text">Step Time</div>
-                <input  />
-            </div>
+       <form method="POST" action={{ url_for('game') }} class="row g-3 needs-validation" novalidate>
+            {{ form.hidden_tag() }}
+            {% for field in form if not 'hidden' in field.flags %}
+                <div class="choosing__all">
+                    {{ field(class='form-select btn-light') if field.type != 'SubmitField' }}
+                </div>
+            {% endfor %}
             <div class="choosing__all">
-               <span class="choosing__color__text">Choose your color</span>
-                <select>
-                    <option>White</option>
-                    <option>Black</option>
-                </select>
-            </div>
-            <div class="choosing__all">
-                <div class="host__text">Choose host</div>
-                <input />
-            </div>
-            <div class="choosing__all">
-                <button  class="button__class" type="submit" type="button">Create game</button>
+                {{ form.submit(class='button__class btn btn-primary btn-lg', id='but1') }}
             </div>
         </form>
     </div>
-    <div class="auth">
-        {% if current_user.is_authenticated %}
-            <a href="{{ url_for('logout') }}" class="login-link">Logout</a>
-        {% else %}
-            <a href="{{ url_for('register') }}" class="login-link">Register</a>
-            <a href="{{ url_for('login') }}" class="login-link">Login</a>
-        {% endif %}
-    </div>
 
-    <script src="{{ url_for('static', filename='js/app.js') }}"> </script>
+    <script src="{{ url_for('static', filename='js/play_button.js') }}"></script>
 </body>
 </html>
 {% endblock content %}

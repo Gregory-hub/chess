@@ -2,7 +2,7 @@ from flask import render_template, request, redirect, url_for
 from flask_login import current_user, logout_user
 from flask_socketio import emit
 
-from chess import app, socketio, clients
+from chess import app, socketio, clients, logger
 from chess.forms import RegistrationForm, LoginForm, StartGameForm
 from chess.auth import sign_in, sign_up, login_on_registration, get_current_client, get_client_by_username
 from chess.models import User
@@ -15,9 +15,7 @@ def connect():
     client = get_current_client()
     if client:
         client.add()
-        print('\nConnected:', client)
-        print(*clients, sep='\n')
-        print()
+        logger.info(f'connected: {client}')
 
 
 @socketio.event
@@ -25,9 +23,7 @@ def disconnect():
     client = get_current_client()
     if client:
         client.remove()
-        print('\nDisconnected:', client)
-        print(*clients, sep='\n')
-        print()
+        logger.info(f'disconnected: {client}')
 
 
 @socketio.event

@@ -33,7 +33,7 @@ logger_config = {
         'simple': {
             'class': 'logging.FileHandler',
             'filename': 'logger.log',
-            'level': 'WARNING',
+            'level': 'INFO',
             'formatter': 'simple'
         }
     },

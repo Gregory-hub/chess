@@ -1,3 +1,2 @@
 # chess
-Online chess game
-Created using flask, sqlalchemy, socketio
+Online chess game created with flask, sqlalchemy, socketio

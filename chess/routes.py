@@ -6,7 +6,7 @@ from chess import app, socketio, clients
 from chess.forms import RegistrationForm, LoginForm, StartGameForm
 from chess.auth import sign_in, sign_up, login_on_registration, get_current_client, get_client_by_username
 from chess.models import User
-from chess.start_game import send_invitaion
+from chess.connect import send_invitaion, get_matched_users
 
 
 # sockets
@@ -44,16 +44,36 @@ def invite(username, game_data):
         emit('success', 'Invited')
 
 
+@socketio.event
+def search(query):
+    matched_users = get_matched_users(query)
+    emit('search_result', matched_users)
+
+
 # routes
 @app.route('/')
 def index():
-    form = StartGameForm()
-    return render_template('index.html', form=form)
+    return render_template('index.html')
 
 
 @app.route('/game/', methods=['POST'])
 def game():
+    form = StartGameForm()
+    if form.validate():
+        pass
     return render_template('game.html')
+
+
+@app.route('/game_config/', methods=['GET'])
+def game_config():
+    form = StartGameForm()
+    return render_template('game_config.html', form=form)
+
+
+@app.route('/user/<username>/', methods=['GET'])
+def user(username):
+    user = User.query.filter_by(username=username).first()
+    return render_template('user.html', user=user)
 
 
 @app.route('/register/', methods=['GET', 'POST'])
@@ -89,15 +109,3 @@ def login():
 def logout():
     logout_user()
     return redirect(url_for('index'))
-
-
-@app.route('/user/<username>/', methods=['GET'])
-def user(username):
-    user = User.query.filter_by(username=username).first()
-    return render_template('user.html', user=user)
-
-
-@app.route('/game_config/', methods=['GET', 'POST'])
-def game_config():
-    form = StartGameForm()
-    return render_template('game_config.html', form=form)

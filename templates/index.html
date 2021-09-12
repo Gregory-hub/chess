@@ -7,26 +7,15 @@
             <div class="title__text">Chess</div>
         </div>
     </header>
+
+    <div class="free_space"></div>
+
     <div id="block_f" class="b_area">
         <div class="button">
-            <button id="but1" type="button" class="button__class btn btn-primary btn-lg">Play</button>
+            <a href="{{ url_for('game_config') }}"><button id="but1" type="button" class="play_button btn btn-primary btn-lg">Play</button></a>
         </div>
     </div>
-    <div id="choosing_area" class="area_button">
-       <form method="POST" action={{ url_for('game') }} class="row g-3 needs-validation" novalidate>
-            {{ form.hidden_tag() }}
-            {% for field in form if not 'hidden' in field.flags %}
-                <div class="choosing__all">
-                    {{ field(class='form-select btn-light') if field.type != 'SubmitField' }}
-                </div>
-            {% endfor %}
-            <div class="choosing__all">
-                {{ form.submit(class='button__class btn btn-primary btn-lg', id='but1') }}
-            </div>
-        </form>
-    </div>
 
-    <script src="{{ url_for('static', filename='js/play_button.js') }}"></script>
 </body>
 </html>
 {% endblock content %}

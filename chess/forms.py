@@ -68,7 +68,8 @@ class StartGameForm(FlaskForm):
         (600, '10 min'),
         (900, '15 min'),
         (1800, '30 min')
-    ])
+    ], validators=[DataRequired()])
+
     supplement = SelectField('Supplement time', choices=[
         (1, '1 sec'),
         (2, '2 sec'),
@@ -79,11 +80,14 @@ class StartGameForm(FlaskForm):
         (20, '20 sec'),
         (30, '30 sec'),
         (60, '60 sec')
-    ])
+    ], validators=[DataRequired()])
+
     player_color = SelectField('Your color', choices=[
         ('black', 'black'),
         ('white', 'white'),
         ('random', 'random'),
     ])
-    opponent = SelectField('Opponent')
+
+    opponent = StringField('Opponent', validators=[DataRequired()])
+
     submit = SubmitField('Play')

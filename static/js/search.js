@@ -3,7 +3,7 @@ $(document).ready(function() {
         query = this.value
         socket.emit('search', query)
     })
-    
+
     socket.on('search_result', function(matched_users) {
         $('.dropdown-item').remove()
         for (let i = 0; i < matched_users.length; i++) {

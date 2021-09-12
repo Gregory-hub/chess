@@ -23,6 +23,7 @@ class Game(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     start_time = db.Column(db.DateTime, nullable=False)
     game_length = db.Column(db.Interval, nullable=False)
+    supplement = db.Column(db.Integer, nullable=False)
 
     players = db.relationship('Player', backref='game')
     moves = db.relationship('Move', backref='game')

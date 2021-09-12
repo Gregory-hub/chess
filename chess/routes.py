@@ -2,11 +2,12 @@ from flask import render_template, request, redirect, url_for
 from flask_login import current_user, logout_user
 from flask_socketio import emit
 
-from chess import app, socketio, clients, logger
+from chess import app, socketio, logger
 from chess.forms import RegistrationForm, LoginForm, StartGameForm
-from chess.auth import sign_in, sign_up, login_on_registration, get_current_client, get_client_by_username
+from chess.auth import sign_in, sign_up, login_on_registration, get_current_client
 from chess.models import User
-from chess.connect import send_invitaion, get_matched_users
+from chess.connect import get_matched_users, invite
+from chess.game import create_game
 
 
 # sockets
@@ -27,20 +28,6 @@ def disconnect():
 
 
 @socketio.event
-def invite(username, game_data):
-    inviting = get_current_client()
-    invited = get_client_by_username(username)
-    if inviting is None:
-        emit('error', 'First login')
-    elif invited is None:
-        emit('error', 'User is not online')
-    else:
-        print(f'Invitation from "{inviting}" to "{invited}"')
-        send_invitaion(inviting, invited, game_data)
-        emit('success', 'Invited')
-
-
-@socketio.event
 def search(query):
     matched_users = get_matched_users(query)
     emit('search_result', matched_users)
@@ -56,8 +43,15 @@ def index():
 def game():
     form = StartGameForm()
     if form.validate():
-        pass
-    return render_template('game.html')
+        game_time = form.get('game_time')
+        supplement = form.get('supplement')
+        color = form.get('player_color')
+        opponent_username = form.get('opponent')
+
+        create_game(game_time, supplement, color, opponent_username)
+        return render_template('game.html')
+
+    return render_template('game_config.html', form=form)
 
 
 @app.route('/game_config/', methods=['GET'])

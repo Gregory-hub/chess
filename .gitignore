@@ -1,7 +1,6 @@
 __pycache__.py
 __pycache__/
 
+logger.log
 venv/
 .idea/
-
-logger.log

@@ -1,22 +1,26 @@
-body{
+body {
     margin: 0;
     padding: 0;
     color: #5C4033;
 }
 
+
 /* Header */
-.title{
+
+.title {
     text-align: center;
     margin-top: 20px;
 }
 
-.title__text{
+.title__text {
     font-size: 30px;
     font-weight: bold;
 }
 
+
 /* Area */
-.b_area{
+
+.b_area {
     text-align: center;
 }
 
@@ -24,7 +28,7 @@ body{
     height: 200px;
 }
 
-.play_button{
+.play_button {
     height: 50px;
     padding: 8px;
     min-width: 160px;
@@ -38,7 +42,7 @@ body{
     border: 2px solid black;
 }
 
-.play_button:hover{
+.play_button:hover {
     background-color: white;
     color: #5C4033;
     border: 2px solid black;
@@ -48,3 +52,7 @@ body{
     max-width: 800px;
     text-align: center;
 }
+
+/* .flashes {
+    
+} */

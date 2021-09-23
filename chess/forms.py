@@ -17,10 +17,10 @@ def not_None(form, username):
 
 
 class RegistrationForm(FlaskForm):
-    username = StringField('Username', validators=[DataRequired(), Length(min=2, max=20), no_space, not_None])
-    email = StringField('Email', validators=[DataRequired(), Email()])
-    password = PasswordField('Password', validators=[DataRequired(), Length(min=8)])
-    confirm_password = PasswordField('Confirm password', validators=[DataRequired(), Length(min=8), EqualTo('password', message="Passwords must match")])
+    username = StringField('Username', validators=[DataRequired(), Length(min=2, max=20), no_space, not_None], render_kw={'placeholder': 'Username'})
+    email = StringField('Email', validators=[DataRequired(), Email()], render_kw={'placeholder': 'Email'})
+    password = PasswordField('Password', validators=[DataRequired(), Length(min=8)], render_kw={'placeholder': 'Password'})
+    confirm_password = PasswordField('Confirm password', validators=[DataRequired(), Length(min=8), EqualTo('password', message="Passwords must match")], render_kw={'placeholder': 'Confirm password'})
     image = FileField('Image')
     submit = SubmitField('Sign up')
 
@@ -36,8 +36,8 @@ class RegistrationForm(FlaskForm):
 
 
 class LoginForm(FlaskForm):
-    username_or_email = StringField('Username or email', validators=[DataRequired(), Length(min=2)])
-    password = PasswordField('Password', validators=[DataRequired(), Length(min=8)])
+    username_or_email = StringField('Username or email', validators=[DataRequired(), Length(min=2)], id='floatingInput', render_kw={'placeholder': 'Username or email'})
+    password = PasswordField('Password', validators=[DataRequired(), Length(min=8)], render_kw={'placeholder': 'Username or email'})
     submit = SubmitField('Log in')
 
     def validate_username_or_email(self, username_or_email):

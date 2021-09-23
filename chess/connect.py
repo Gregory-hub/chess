@@ -16,7 +16,9 @@ def get_matched_users(query: str):
     if query == '':
         return []
     users = User.query.all()
-    matched_users = [user.username for user in users if re.search(query, user.username)]
+    current_username = get_current_client().username
+    print(current_username)
+    matched_users = [user.username for user in users if re.search(query, user.username) and user.username != current_username]
     return matched_users
 
 

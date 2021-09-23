@@ -25,6 +25,7 @@ class Client:
         return f'Client(username="{self.username}", sid="{self.sid}", user_agent="{self.user_agent}")'
 
     def __eq__(self, other):
+        # for client comparison
         if not isinstance(other, Client):
             return NotImplemented
 

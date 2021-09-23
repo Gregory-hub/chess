@@ -42,6 +42,7 @@ def index():
 @app.route('/game_config/', methods=['GET'])
 def game_config():
     if not current_user.is_authenticated:
+        flash('You have to login in order to play')
         return redirect(url_for('login'))
     form = StartGameForm()
     return render_template('game_config.html', form=form)
@@ -78,7 +79,7 @@ def register():
         sign_up(form)
         if form.errors == {}:
             login_on_registration(form)
-            flash("Succesfull registration")
+            flash("You signed up")
             return redirect(url_for('index'))
 
     return render_template('register.html', form=form)
@@ -93,7 +94,7 @@ def login():
     if request.method == 'POST' and form.validate():
         sign_in(form)
         if current_user.is_authenticated:
-            flash("Succesfull login")
+            flash("You logged in")
             return redirect(url_for('index'))
 
     return render_template('login.html', form=form)
@@ -102,5 +103,5 @@ def login():
 @app.route('/logout/', methods=['GET'])
 def logout():
     logout_user()
-    flash("Successful logout")
+    flash("You logged out")
     return redirect(url_for('index'))

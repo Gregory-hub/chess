@@ -32,14 +32,14 @@ body {
     height: 50px;
     padding: 8px;
     min-width: 160px;
-    background-color: #5C4033;
+    background-color: #5d5c61;
     color: white;
     border-radius: 12px;
     outline: none;
     font-weight: bold;
     cursor: pointer;
     transition: .5s;
-    border: 2px solid black;
+    border: 2px solid #5C4033;
 }
 
 .play_button:hover {
@@ -53,6 +53,18 @@ body {
     text-align: center;
 }
 
-/* .flashes {
-    
-} */
+.flash_message {
+    color: #A1B099;
+}
+
+.auth-form {
+    margin-top: 40px;
+}
+
+.redirect-to-login {
+    margin-top: 20px;
+}
+
+.redirect-to-login a:hover {
+    color: #5d5c61;
+}

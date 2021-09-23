@@ -9,7 +9,7 @@ from flask_login import LoginManager
 from flask_socketio import SocketIO
 
 
-host = 'localhost'
+host = '192.168.0.92'
 port = 5000
 app = Flask(__name__, template_folder=os.path.abspath('templates'), static_folder=os.path.abspath('static'))
 app.secret_key = os.urandom(16)

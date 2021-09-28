@@ -68,3 +68,11 @@ body {
 .redirect-to-login a:hover {
     color: #5d5c61;
 }
+
+.search-dropdown-item {
+    cursor: pointer;
+}
+
+.form_field {
+    cursor: pointer;
+}

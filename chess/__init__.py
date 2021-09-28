@@ -1,4 +1,6 @@
 import os
+import netifaces as ni
+from netifaces import AF_INET
 import logging
 from logging import config
 
@@ -8,8 +10,8 @@ from flask_bcrypt import Bcrypt
 from flask_login import LoginManager
 from flask_socketio import SocketIO
 
-
-host = '192.168.0.92'
+hosts = [ni.ifaddresses(interface)[AF_INET][0]['addr'] for interface in ni.interfaces()]
+hosts.pop(hosts.index('127.0.0.1'))
 port = 5000
 app = Flask(__name__, template_folder=os.path.abspath('templates'), static_folder=os.path.abspath('static'))
 app.secret_key = os.urandom(16)

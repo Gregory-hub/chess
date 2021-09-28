@@ -1,4 +1,4 @@
-from chess import app, socketio, hosts, port
+from chess import app, socketio, hosts, port, logger
 
 
 if __name__ == '__main__':
@@ -7,4 +7,5 @@ if __name__ == '__main__':
             socketio.run(app, debug=True, host=host, port=port)
             break
         except Exception as e:
-            print(e.message)
+            logger.error(e)
+            print(e)

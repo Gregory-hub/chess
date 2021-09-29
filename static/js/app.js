@@ -16,4 +16,4 @@ $(document).ready(function() {
     socket.on('invite', function(data) {
         $('#invitation').html('Invitation from', inviting, game_data)
     })
-}
+})

@@ -1,4 +1,5 @@
 $(document).ready(function() {
+    let socket = io(location.host)
     $('#search').on('input', function() {
         query = this.value
         socket.emit('search', query)

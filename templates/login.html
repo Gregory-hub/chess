@@ -4,7 +4,7 @@
     <h2 class='title_text'>Login</h2>
 </div>
 <div class="container w-50 auth-form">
-    <form method="POST" action="{{ url_for('login') }}" class="login-form row g-3 needs-validation">
+    <form method="POST" action="{{ url_for('login') }}" class="login-form g-3 needs-validation">
         {{ form.hidden_tag() }}
         {% for field in form if not 'hidden' in field.flags %}
 

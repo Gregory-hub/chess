@@ -1,12 +1,16 @@
 {% extends 'layout.html' %}
 
 {% block extra_links %}
-<link rel="stylesheet"
-    href="{{ url_for('static', filename='css/chessboard-1.0.0.css') }}">
+<link rel="stylesheet" href="{{ url_for('static', filename='css/chessboard-1.0.0.css') }}">
 {% endblock extra_links %}
 
 {% block content %}
-<div id="board1" style="width: 600px"></div>
+<div class="row">
+    <div class="col-8">
+        <div id="board1"></div>
+    </div>
+    <div class="col-sm-4"></v>
+</div>
 {% endblock content %}
 
 {% block extra_scripts %}

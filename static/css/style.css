@@ -1,9 +1,14 @@
 body {
-    margin: 0;
-    padding: 0;
     color: #5C4033;
 }
 
+.nav-link {
+    color: #5d5c61;
+}
+
+.nav-link:hover {
+    color: #5C4033;
+}
 
 /* Header */
 
@@ -57,6 +62,7 @@ body {
     color: #A1B099;
 }
 
+/* authentication */
 .auth-form {
     margin-top: 40px;
 }

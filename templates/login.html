@@ -3,33 +3,48 @@
 <div class="title">
     <h2 class='title_text'>Login</h2>
 </div>
-<div class="container w-50 auth-form">
-    <form method="POST" action="{{ url_for('login') }}" class="login-form g-3 needs-validation">
-        {{ form.hidden_tag() }}
-        {% for field in form if not 'hidden' in field.flags %}
+<div class="container-lg auth-form">
+    <div class="row">
 
-            {% if field.type != 'SubmitField' %}
-                <div class="form-floating mb-3">
-                    {{ field(class='form-control') }}
-                    {{ field.label() }}
+        <div class="col-lg-3 col-12"></div>
+
+        <div class="col-lg-6 col-12">
+            <form method="POST" action="{{ url_for('login') }}" class="login-form g-3 needs-validation">
+                {{ form.hidden_tag() }}
+                {% for field in form if not 'hidden' in field.flags %}
+
+                    {% if field.type != 'SubmitField' %}
+                        <div class="form-floating mb-3">
+                            {{ field(class='form-control') }}
+                            {{ field.label() }}
+                        </div>
+                    {% endif %}
+
+                    {% if field.errors %}
+                        <ul>
+                            {% for error in field.errors %}
+                                <li class="error">{{ error }}</li>
+                            {% endfor %}
+                        </ul>
+                    {% endif %}
+
+                {% endfor %}
+                
+                <div id="block_f" class="b_area">
+                    <div class="button">
+                        {{ form.submit(class="play_button btn btn-primary btn-lg") }}
+                    </div>
                 </div>
-            {% endif %}
 
-            {% if field.errors %}
-                <ul>
-                    {% for error in field.errors %}
-                        <li class="error">{{ error }}</li>
-                    {% endfor %}
-                </ul>
-            {% endif %}
+            </form>
 
-        {% endfor %}
-    <div id="block_f" class="b_area">
-        <div class="button">
-            {{ form.submit(class="play_button btn btn-primary btn-lg") }}
+            <div class="redirect-to-login">Don't have an account? <a href="{{ url_for('register') }}" class="login-link">Register</a></div>
+
+        
         </div>
+
+        <div class="col-lg-3 col-12"></div>
+
     </div>
-    </form>
-    <div class="redirect-to-login">Don't have an account? <a href="{{ url_for('register') }}" class="login-link">Register</a></div>
 </div>
 {% endblock content %}

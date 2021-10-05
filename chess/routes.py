@@ -4,10 +4,10 @@ from flask_socketio import emit
 
 from chess import app, socketio, logger
 from chess.forms import RegistrationForm, LoginForm, StartGameForm
-from chess.auth import sign_in, sign_up, login_on_registration, get_current_client
+from chess.auth import get_user_from_username_or_email, sign_in, sign_up, login_on_registration, get_current_client
 from chess.models import User
 from chess.connect import get_matched_users, invite
-from chess.game import create_game
+from chess.game import get_game_conf, create_game
 
 
 # sockets
@@ -52,13 +52,13 @@ def game_config():
 def game():
     form = StartGameForm()
     if form.validate():
-        game_time = form['game_time']
-        supplement = form['supplement']
-        color = form['player_color']
-        opponent_username = form['opponent']
-
-        create_game(game_time, supplement, color, opponent_username)
-        return render_template('game.html')
+        game_conf = get_game_conf(form)
+        create_game(game_conf)
+        return render_template(
+            'game.html',
+            player1=game_conf['player1'],
+            player2=game_conf['player2']
+        )
 
     return redirect(url_for('game_config'))
 

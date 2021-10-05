@@ -23,24 +23,27 @@ class Game(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     start_time = db.Column(db.DateTime, nullable=False)
     game_length = db.Column(db.Interval, nullable=False)
-    supplement = db.Column(db.Integer, nullable=False)
+    supplement = db.Column(db.Interval, nullable=False)
 
     players = db.relationship('Player', backref='game')
     moves = db.relationship('Move', backref='game')
 
     def __repr__(self):
-        return f'Game(players={self.players}, start_time={self.start_time}, game_length={self.game_length} moves={self.moves})'
+        return f'Game(players={self.players}, start_time={self.start_time}, game_length={self.game_length}, moves={self.moves})'
 
 
 class Player(db.Model):
     """Helper model for game being able to have 2 players"""
     id = db.Column(db.Integer, primary_key=True)
-    player_id = db.Column(db.ForeignKey('user.id'), nullable=False)
+    user_id = db.Column(db.ForeignKey('user.id'), nullable=False)
     game_id = db.Column(db.ForeignKey('game.id'), nullable=False)
     color = db.Column(db.String(5), nullable=False)
+    time_left = db.Column(db.Interval, nullable=False)
+
+    user = db.relationship('User')
 
     def __repr__(self):
-        return f'Player(player_id={self.player_id}, game_id={self.game_id})'
+        return f'Player(user={self.user.username}, game_id={self.game_id}, color={self.color}, time_left={self.time_left})'
 
 
 class Move(db.Model):

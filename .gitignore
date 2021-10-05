@@ -1,5 +1,16 @@
 __pycache__.py
 __pycache__/
+*.pyc
+
+instance/
+
+.pytest_cache/
+.coverage
+htmlcov/
+
+dist/
+build/
+*.egg-info/
 
 logger.log
 venv/

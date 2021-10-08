@@ -58,6 +58,10 @@ body {
     text-align: center;
 }
 
+.list-group {
+    margin-bottom: 5px;;
+}
+
 .flash_message {
     color: #A1B099;
 }

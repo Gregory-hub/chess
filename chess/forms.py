@@ -16,6 +16,11 @@ def not_None(form, username):
         raise ValidationError('Username cannot be "None"')
 
 
+def user_exists(form, username):
+    if User.query.filter(User.username == username.data).first() is None:
+        raise ValidationError("User does not exist")
+
+
 class RegistrationForm(FlaskForm):
     username = StringField('Username', validators=[DataRequired(), Length(min=2, max=20), no_space, not_None], render_kw={'placeholder': 'Username'})
     email = StringField('Email', validators=[DataRequired(), Email()], render_kw={'placeholder': 'Email'})
@@ -88,6 +93,6 @@ class StartGameForm(FlaskForm):
         ('random', 'random'),
     ])
 
-    opponent = StringField('Opponent', validators=[DataRequired()])
+    opponent = StringField('Opponent', validators=[DataRequired(), user_exists])
 
     submit = SubmitField('Play')

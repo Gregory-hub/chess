@@ -4,7 +4,7 @@ from flask_socketio import emit
 
 from chess import app, socketio, logger
 from chess.forms import RegistrationForm, LoginForm, StartGameForm
-from chess.auth import get_user_from_username_or_email, sign_in, sign_up, login_on_registration, get_current_client
+from chess.auth import sign_in, sign_up, login_on_registration, get_current_client
 from chess.models import User
 from chess.connect import get_matched_users, invite
 from chess.game import get_game_conf, create_game

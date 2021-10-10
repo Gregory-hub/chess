@@ -1,10 +1,12 @@
 import re
+import os
 
+from werkzeug.utils import secure_filename
 from flask import request
 from flask_login import login_user, current_user
 
 from chess.models import db, User
-from chess import hasher, clients
+from chess import UPLOAD_FOLDER, hasher, clients, app
 
 
 class Client:
@@ -36,7 +38,7 @@ def sign_up(form):
     username = form.username.data
     email = form.email.data
     password = form.password.data
-    image = form.image.data if form.image.data else None
+    image = request.files['image'] 
     password_hash = hasher.generate_password_hash(password).decode()
 
     user = User(
@@ -44,9 +46,10 @@ def sign_up(form):
         email=email,
         password=password_hash
     )
-    if image:
-        image_path = upload_image(image)
-        user.image = image_path
+    if image.filename != '' and allowed_file(image):
+        filename = upload_image(image, username)
+        user.image = filename
+
     add_user(user)
 
 
@@ -72,10 +75,6 @@ def add_user(user: User):
     db.session.commit()
 
 
-def upload_image(image):
-    pass
-
-
 def get_user_from_username_or_email(username_or_email: str):
     pattern = re.compile(r'^[^@]+@[^@]+\.[^@]+$')
     is_email = pattern.match(username_or_email)
@@ -99,3 +98,20 @@ def get_client_by_username(username: str):
         if client.username == username:
             return client
     return None
+
+
+def allowed_file(file):
+    ALLOWED_EXTENSIONS = app.config['ALLOWED_EXTENSIONS']
+    filename = file.filename
+    return '.' in filename and os.path.splitext(filename)[1].strip('.') in ALLOWED_EXTENSIONS
+
+
+def upload_image(image, username: str):
+    UPLOAD_FOLDER = app.config['UPLOAD_FOLDER']
+    ext = os.path.splitext(image.filename)[1]
+    filename = username + ext
+    upload_path = os.path.join(UPLOAD_FOLDER, filename)
+    if filename in os.listdir(UPLOAD_FOLDER):
+        os.remove(upload_path)
+    image.save(upload_path)
+    return filename

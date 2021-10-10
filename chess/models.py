@@ -1,6 +1,8 @@
+import os
+
 from flask_login import UserMixin
 
-from chess import db, login_manager
+from chess import db, login_manager, app
 
 
 @login_manager.user_loader
@@ -13,7 +15,10 @@ class User(db.Model, UserMixin):
     username = db.Column(db.String(50), unique=True, nullable=False)
     email = db.Column(db.String(50), unique=True, nullable=False)
     password = db.Column(db.String(1000), nullable=False)
-    image = db.Column(db.String(200), nullable=False, default='default.jpg')
+    image = db.Column(db.String(200), nullable=False, default='default.jpeg')
+
+    def get_image_url(self):
+        return os.path.join(app.config['UPLOAD_URL'], self.image)
 
     def __repr__(self):
         return f'User(username={self.username}, email={self.email}, image={self.image})'

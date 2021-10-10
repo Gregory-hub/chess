@@ -1,4 +1,4 @@
-from flask import render_template, request, redirect, url_for, flash
+from flask import render_template, request, redirect, url_for, flash, send_from_directory
 from flask_login import current_user, logout_user
 from flask_socketio import emit
 
@@ -76,6 +76,9 @@ def register():
 
     form = RegistrationForm()
     if request.method == 'POST' and form.validate():
+        if 'image' not in request.files:
+            flash('No image part')
+            return render_template('register.html', form=form)
         sign_up(form)
         if form.errors == {}:
             login_on_registration(form)
@@ -105,3 +108,8 @@ def logout():
     logout_user()
     flash("You logged out")
     return redirect(url_for('index'))
+
+
+@app.route('/media/<filename>')
+def upload(filename):
+    return send_from_directory(app.config['UPLOAD_FOLDER'], filename)

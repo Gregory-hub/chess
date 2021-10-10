@@ -31,7 +31,7 @@ class RegistrationForm(FlaskForm):
 
     def validate_username(self, username):
         user = User.query.filter(User.username == username.data).first()
-        if user:
+        if user or username.data == 'default':
             raise ValidationError('This username is already taken')
 
     def validate_email(self, email):

@@ -22,6 +22,12 @@ socketio = SocketIO(app)
 hasher = Bcrypt(app)
 login_manager = LoginManager(app)
 clients = []
+UPLOAD_FOLDER = os.path.join(os.getcwd(), 'media')         # path of run.py folder + /media
+ALLOWED_EXTENSIONS = {'jpg', 'jpeg', 'png'}
+UPLOAD_URL = '/media/'
+app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
+app.config['ALLOWED_EXTENSIONS'] = ALLOWED_EXTENSIONS
+app.config['UPLOAD_URL'] = UPLOAD_URL
 
 
 logger_config = {

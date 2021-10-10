@@ -9,11 +9,11 @@
         <div class="col-lg-3 col-12"></div>
 
         <div class="col-lg-6 col-12">
-            <form method="POST" action="{{ url_for('register') }}" class="login-form row g-3 needs-validation" novalidate>
+            <form method="POST" enctype="multipart/form-data" action="{{ url_for('register') }}" class="login-form row g-3 needs-validation" novalidate>
                 {{ form.hidden_tag() }}
                 {% for field in form if not 'hidden' in field.flags %}
 
-                    {% if field.type != 'SubmitField'  and field.type != 'FileField'%}
+                    {% if field.type != 'SubmitField' and field.type != 'FileField'%}
                         <div class="form-floating mb-3">
                             {{ field(class='form-control') }}
                             {{ field.label() }}
@@ -29,7 +29,7 @@
                     {% endif %}
 
                 {% endfor %}
-                
+
                 <div class="custom-file">
                     {{ form.image(class='custom-file-input', id='validatedCustomFile') }}
                 </div>

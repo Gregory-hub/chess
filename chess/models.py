@@ -17,6 +17,8 @@ class User(db.Model, UserMixin):
     password = db.Column(db.String(1000), nullable=False)
     image = db.Column(db.String(200), nullable=False, default='default.jpeg')
 
+    players = db.relationship('Player')
+
     def get_image_url(self):
         return os.path.join(app.config['UPLOAD_URL'], self.image)
 

@@ -20,6 +20,8 @@ def create_game(game_conf: dict):
     db.session.add(game)
     db.session.commit()
 
+    return game
+
 
 def get_game_conf(form: StartGameForm):
     player1_color = form['player_color'].data
@@ -54,3 +56,12 @@ def get_game_conf(form: StartGameForm):
     }
 
     return game_conf
+
+
+def get_my_games():
+    user = current_user
+    return [player.game for player in user.players]
+
+
+def get_game_by_id(game_id: int):
+    return Game.query.get(1)

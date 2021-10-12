@@ -7,7 +7,7 @@ from chess.forms import RegistrationForm, LoginForm, StartGameForm
 from chess.auth import sign_in, sign_up, login_on_registration, get_current_client
 from chess.models import User
 from chess.connect import get_matched_users, invite
-from chess.game import get_game_conf, create_game
+from chess.game import get_game_conf, create_game, get_my_games, get_game_by_id
 
 
 # sockets
@@ -39,13 +39,38 @@ def index():
     return render_template('index.html')
 
 
-@app.route('/game_config/', methods=['GET'])
+@app.route('/my_games/', methods=['GET'])
+def my_games():
+    if not current_user.is_authenticated:
+        flash('You have to login in order to play')
+        return redirect(url_for('login'))
+    my_games = get_my_games()
+    games = []
+    for game in my_games:
+        opponent = [player for player in game.players if player.user != current_user][0]
+
+        games.append({
+            'opponent_username': opponent.user.username,
+            'game_length': game.game_length,
+            'supplement': game.supplement
+        })
+
+    return render_template('my_games.html', games=games)
+
+
+@app.route('/game_config/', methods=['GET', 'POST'])
 def game_config():
     if not current_user.is_authenticated:
         flash('You have to login in order to play')
         return redirect(url_for('login'))
     form = StartGameForm()
-    return render_template('game_config.html', form=form)
+    if request.method == 'GET':
+        return render_template('game_config.html', form=form)
+    elif form.validate():
+        game_conf = get_game_conf(form)
+        game = create_game(game_conf)
+        return redirect(url_for('game'))
+    return render_template('game_config.html')
 
 
 @app.route('/game/', methods=['POST'])
@@ -53,7 +78,6 @@ def game():
     form = StartGameForm()
     if form.validate():
         game_conf = get_game_conf(form)
-        create_game(game_conf)
         return render_template(
             'game.html',
             player1=game_conf['player1'],
@@ -110,6 +134,7 @@ def logout():
     return redirect(url_for('index'))
 
 
-@app.route('/media/<filename>')
+# media url
+@app.route('/media/<filename>', methods=['GET'])
 def upload(filename):
     return send_from_directory(app.config['UPLOAD_FOLDER'], filename)

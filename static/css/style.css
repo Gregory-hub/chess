@@ -1,3 +1,24 @@
+/* Handle */
+/* width */
+::-webkit-scrollbar {
+  width: 13px;
+}
+
+/* Track */
+::-webkit-scrollbar-track {
+  background: #f1f1f1; 
+}
+ 
+/* Handle */
+::-webkit-scrollbar-thumb {
+  background: #7d7a83; 
+}
+
+/* Handle on hover */
+::-webkit-scrollbar-thumb:hover {
+  background: #77757e; 
+}
+
 body {
     color: #5C4033;
 }
@@ -90,6 +111,22 @@ body {
 .profile_image {
     width: 50px;
     height: 50px;
+}
+
+.games {
+    color: rgba(14, 13, 13, 0.87);
+    overflow-y: auto;
+    height: 700px;
+    background: #d6d6d588;
+    -webkit-box-shadow: 0px 3px 8px -1px rgba(84,84,84,0.9); 
+    box-shadow: 0px 3px 8px -1px rgba(84,84,84,0.9);
+    border-bottom: 2px solid gray;
+    border-top: 2px solid gray;
+}
+
+.game {
+    border-bottom: 1px solid gray;
+    height: 40px;
 }
 
 /* chessboard */

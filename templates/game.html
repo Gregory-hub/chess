@@ -21,10 +21,10 @@
                     <div class="row mt-1">
 
                         <div class="col-lg-2 col-3">
-                            <img class="profile_image" src="{{ player1.user.get_image_url() }}"></img>
+                            <img class="profile_image" src="{{ opponent.user.get_image_url() }}"></img>
                         </div>
                         <div class="col-lg-7 col-9">
-                            <div class="username">{{ player1.user.username }}</div>
+                            <div class="username">{{ opponent.user.username }}</div>
                         </div>
                         <div class="col-lg-3 col-12">00:00</div>
 
@@ -34,10 +34,10 @@
                     <div class="row mt-1 mb-1">
 
                         <div class="col-lg-2 col-3 order-2 order-lg-1 text-end text-lg-start">
-                            <img class="profile_image" src="{{ player2.user.get_image_url() }}"></img>
+                            <img class="profile_image" src="{{ current_player.user.get_image_url() }}"></img>
                         </div>
                         <div class="col-lg-7 col-9 order-1 text-end text-lg-start">
-                            <div class="username">{{ player2.user.username }}</div>
+                            <div class="username">{{ current_player.user.username }}</div>
                         </div>
                         <div class="col-lg-3 col-12 order-3 order-lg-3 text-end text-lg-start">00:00</div>
 

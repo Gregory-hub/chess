@@ -114,13 +114,13 @@ body {
 }
 
 .games {
-    color: rgba(14, 13, 13, 0.87);
+    /* color: rgba(14, 13, 13, 0.87); */
     overflow-y: auto;
     height: 700px;
-    background: #d6d6d588;
-    -webkit-box-shadow: 0px 3px 8px -1px rgba(84,84,84,0.9); 
-    box-shadow: 0px 3px 8px -1px rgba(84,84,84,0.9);
-    border-bottom: 2px solid gray;
+    /* background: #d6d6d588; */
+    /* -webkit-box-shadow: 0px 3px 8px -1px rgba(84,84,84,0.9);  */
+    /* box-shadow: 0px 3px 8px -1px rgba(84,84,84,0.9); */
+    /* border-bottom: 2px solid gray; */
     border-top: 2px solid gray;
 }
 

@@ -45,12 +45,11 @@ class Player(db.Model):
     user_id = db.Column(db.ForeignKey('user.id'), nullable=False)
     game_id = db.Column(db.ForeignKey('game.id'), nullable=False)
     color = db.Column(db.String(5), nullable=False)
-    time_left = db.Column(db.Interval, nullable=False)
 
     user = db.relationship('User')
 
     def __repr__(self):
-        return f'Player(user={self.user.username}, game_id={self.game_id}, color={self.color}, time_left={self.time_left})'
+        return f'Player(user={self.user.username}, game_id={self.game_id}, color={self.color})'
 
 
 class Move(db.Model):

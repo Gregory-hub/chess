@@ -7,20 +7,21 @@
     </div>
 
     <div class="container-lg">
-    <div class="row">
-        <div class="col-lg-3"></div>
-    <div class="games col-lg-6 col-12 mx-auto">
-        {% for game in games %}
-        <a href="{{ url_for('game') }}"></a>
-            <div class="row game">
-                <div class="col">{{ game.opponent_username }}</div>
-                <div class="col">{{ game.game_length }}</div>
-                <div class="col">{{ game.supplement }}</div>
+        <div class="row">
+            <div class="col-lg-3"></div>
+            <div class="games col-lg-6 col-12 mx-auto">
+                {% for game in games %}
+                    <a href="{{ url_for('game', id=game.id) }}">
+                        <div class="row game">
+                            <div class="col">{{ game.opponent_username }}</div>
+                            <div class="col">{{ game.game_length }}</div>
+                            <div class="col">{{ game.supplement }}</div>
+                        </div>
+                    </a>
+                {% endfor %}
             </div>
-        {% endfor %}
-    </div>
-    <div class="col-lg-3 col-12"></div>
-    </div>
+            <div class="col-lg-3 col-12"></div>
+        </div>
     </div>
 
 {% endblock content %}

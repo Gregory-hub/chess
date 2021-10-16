@@ -7,7 +7,7 @@ from chess.forms import RegistrationForm, LoginForm, StartGameForm
 from chess.auth import sign_in, sign_up, login_on_registration, get_current_client
 from chess.models import User
 from chess.connect import get_matched_users, invite
-from chess.game import get_game_conf, create_game, get_my_games, get_game_by_id
+from chess.game import get_game_conf, create_game, get_my_games
 
 
 # sockets
@@ -64,27 +64,34 @@ def game_config():
         flash('You have to login in order to play')
         return redirect(url_for('login'))
     form = StartGameForm()
+
     if request.method == 'GET':
         return render_template('game_config.html', form=form)
-    elif form.validate():
-        game_conf = get_game_conf(form)
-        game = create_game(game_conf)
-        return redirect(url_for('game'))
+
+    elif request.method == 'POST' and form.validate():
+        game = create_game(
+            length=int(form['game_time'].data),
+            supplement=int(form['supplement'].data),
+            opponent_username=form['opponent'].data,
+            current_player_color=form['player_color'].data
+        )
+        return redirect(url_for('game', id=game.id))
+
     return render_template('game_config.html')
 
 
-@app.route('/game/', methods=['POST'])
-def game():
-    form = StartGameForm()
-    if form.validate():
-        game_conf = get_game_conf(form)
+@app.route('/game/<int:id>', methods=['GET'])
+def game(id: int):
+    game_conf = get_game_conf(id)
+    if game_conf:
         return render_template(
             'game.html',
-            player1=game_conf['player1'],
-            player2=game_conf['player2']
+            current_player=game_conf['current_player'],
+            opponent=game_conf['opponent']
         )
-
-    return redirect(url_for('game_config'))
+    else:
+        flash('Error: game does not exist')
+        return redirect(url_for('game_config'))
 
 
 @app.route('/user/<username>/', methods=['GET'])

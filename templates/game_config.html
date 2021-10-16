@@ -6,7 +6,7 @@
         <h2 class='title_text'>New game</h2>
     </div>
 
-    <form method="POST" action={{ url_for('game') }} class="config_form needs-validation mx-auto" novalidate>
+    <form method="POST" action={{ url_for('game_config') }} class="config_form needs-validation mx-auto" novalidate>
         {{ form.hidden_tag() }}
         {{ form.game_time(class='form-select btn-light form_field mt-3 mb-2') }}
         {{ form.supplement(class='form-select btn-light form_field mb-2') }}

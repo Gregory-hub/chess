@@ -1,12 +1,11 @@
 import re
 import os
 
-from werkzeug.utils import secure_filename
 from flask import request
 from flask_login import login_user, current_user
 
+from chess import UPLOAD_FOLDER, hasher, clients, app, logger
 from chess.models import db, User
-from chess import UPLOAD_FOLDER, hasher, clients, app
 
 
 class Client:
@@ -86,6 +85,15 @@ def get_user_from_username_or_email(username_or_email: str):
 
 
 def get_current_client():
+    if not current_user.is_authenticated:
+        return None
+    client = get_client_by_username(current_user.username)
+    if client is None:
+        logger.error('No current client(current user is authenticated)')
+    return client
+
+
+def create_client():
     if not current_user.is_authenticated:
         return None
     username = current_user.username

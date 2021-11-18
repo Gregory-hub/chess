@@ -1,22 +1,22 @@
+from datetime import datetime
 from flask import render_template, request, redirect, url_for, flash, send_from_directory
 from flask_login import current_user, logout_user
 from flask_socketio import emit
 
-from chess import app, socketio, logger
+from chess import app, socketio, logger, clients
 from chess.forms import RegistrationForm, LoginForm, StartGameForm
-from chess.auth import sign_in, sign_up, login_on_registration, get_current_client
+from chess.auth import sign_in, sign_up, login_on_registration, get_current_client, create_client
 from chess.models import User
-from chess.connect import get_matched_users, invite
+from chess.connect import get_matched_users, invite_player
 from chess.game import get_game_conf, create_game, get_my_games
 
 
 # sockets
 @socketio.event
 def connect():
-    client = get_current_client()
+    client = create_client()
     if client:
         client.add()
-        logger.info(f'connected: {client}')
 
 
 @socketio.event
@@ -24,13 +24,20 @@ def disconnect():
     client = get_current_client()
     if client:
         client.remove()
-        logger.info(f'disconnected: {client}')
 
 
 @socketio.event
-def search(query):
+def search(query: str):
     matched_users = get_matched_users(query)
     emit('search_result', matched_users)
+
+
+@socketio.event
+def invite(data: dict):
+    print('\n', data, '\n', type(data), '\n')
+    invited_username = data['opponent']
+    print(*clients, sep='\n', end='\n\n')
+    invite_player(invited_username, data)
 
 
 # routes
@@ -50,6 +57,7 @@ def my_games():
         opponent = [player for player in game.players if player.user != current_user][0]
 
         games.append({
+            'id': game.id,
             'opponent_username': opponent.user.username,
             'game_length': game.game_length,
             'supplement': game.supplement
@@ -69,19 +77,33 @@ def game_config():
         return render_template('game_config.html', form=form)
 
     elif request.method == 'POST' and form.validate():
+        opponent_username=form['opponent'].data
+        supplement=int(form['supplement'].data)
+        length=int(form['game_time'].data)
+        current_player_color=form['player_color'].data
+
         game = create_game(
-            length=int(form['game_time'].data),
-            supplement=int(form['supplement'].data),
-            opponent_username=form['opponent'].data,
-            current_player_color=form['player_color'].data
+            length=length,
+            supplement=supplement,
+            opponent_username=opponent_username,
+            current_player_color=current_player_color
         )
+
+        current_player_color = get_game_conf(game.id)['current_player'].color
+        colors = ['white', 'black']
+        colors.remove(current_player_color)
+        opponent_color = colors[0]
+
         return redirect(url_for('game', id=game.id))
 
-    return render_template('game_config.html')
+    return render_template('game_config.html', form=form)
 
 
 @app.route('/game/<int:id>', methods=['GET'])
 def game(id: int):
+    if not current_user.is_authenticated:
+        flash('You have to login in order to play')
+        return redirect(url_for('login'))
     game_conf = get_game_conf(id)
     if game_conf:
         return render_template(

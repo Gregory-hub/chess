@@ -17,11 +17,11 @@
 
             <a class="navbar-brand nav-link active" href="{{ url_for('index') }}">Home</a>
 
-            <div class="d-flex navbar-nav ms-auto me-3">
+            <div class="d-flex navbar-nav ms-auto me-3" id="flashes-container">
                 {% with messages = get_flashed_messages() %} 
                     {% if messages %} 
                         {% for message in messages %}
-                            <div class="nav-item flash_message">{{ message }}</div>
+                            <div class="nav-item flash_message" id="flash_message">{{ message }}</div>
                         {% endfor %}
                     {% endif %} 
                 {% endwith %}
@@ -33,9 +33,11 @@
 
             <div class="collapse navbar-collapse" id="navbarToggler">
 
+
                 <div class="navbar-nav ms-auto">
 
                     {% if current_user.is_authenticated %}
+                        <div class="d-flex navbar-nav text-end"><a class="nav-item nav-link" href="{{ url_for('my_games') }}">My games</a></div>
                         <div class="d-flex navbar-nav text-end">
                             <a class="nav-item nav-link" href="{{ url_for('logout') }}">Logout</a>
                         </div>

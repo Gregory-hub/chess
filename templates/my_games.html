@@ -11,7 +11,7 @@
             <div class="col-lg-3"></div>
             <div class="games col-lg-6 col-12 mx-auto">
                 {% for game in games %}
-                    <a href="{{ url_for('game', id=game.id) }}">
+                    <a class="nav-link" href="{{ url_for('game', id=game.id) }}">
                         <div class="row game">
                             <div class="col">{{ game.opponent_username }}</div>
                             <div class="col">{{ game.game_length }}</div>

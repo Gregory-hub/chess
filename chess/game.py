@@ -1,3 +1,4 @@
+from random import choice
 from datetime import datetime, timezone, timedelta
 
 from flask_login import current_user
@@ -13,6 +14,8 @@ def create_game(length: int, supplement: int, opponent_username: str, current_pl
         game_length=timedelta(seconds=length),
         supplement=timedelta(seconds=supplement)
     )
+    if current_player_color == 'random':
+        current_player_color = choice(['black', 'white'])
     game.players = create_players(opponent_username, current_player_color)
 
     db.session.add(game)

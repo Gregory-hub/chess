@@ -40,6 +40,12 @@ def invite(data: dict):
     invite_player(invited_username, data)
 
 
+@socketio.event
+def fen(fen_str: str):
+    print('fen:', fen_str)
+    socketio.emit('fen', fen_str)
+
+
 # routes
 @app.route('/')
 def index():

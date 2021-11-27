@@ -34,7 +34,10 @@
                             <img class="profile_image" src="{{ current_player.user.get_image_url() }}"></img>
                         </div>
                         <div class="col-lg-7 col-9 order-1 text-end text-lg-start">
-                            <div class="username">{{ current_player.user.username }}</div>
+                            <div class="username">
+                                {{ current_player.user.username }}
+                                <div id="current_player_color">{{ current_player.color }}</div>
+                            </div>
                         </div>
                         <div class="col-lg-3 col-12 order-3 order-lg-3 text-end text-lg-start">00:00</div>
 

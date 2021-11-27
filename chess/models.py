@@ -31,12 +31,35 @@ class Game(db.Model):
     start_time = db.Column(db.DateTime, nullable=False)
     game_length = db.Column(db.Interval, nullable=False)
     supplement = db.Column(db.Interval, nullable=False)
+    fen = db.Column(db.String(100), nullable=False, default='rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1')
 
     players = db.relationship('Player', backref='game')
     moves = db.relationship('Move', backref='game')
 
+    def get_pos(self):
+        return self.fen.split()[0]
+
+    def get_active_color(self):
+        return self.fen.split()[1]
+
+    def get_castling_availability(self):
+        return self.fen.split()[2]
+
+    def get_enpassand_target(self):
+        return self.fen.split()[3]
+
+    def get_halfmove_clock(self):
+        return self.fen.split()[4]
+
+    def get_fullmove_number(self):
+        return self.fen.split()[5]
+
+    def update_fen(self, new_fen: str):
+        self.fen = new_fen
+        db.session.commit()
+
     def __repr__(self):
-        return f'Game(players={self.players}, start_time={self.start_time}, game_length={self.game_length}, moves={self.moves})'
+        return f'Game(players={self.players}, start_time={self.start_time}, game_length={self.game_length}, moves={self.moves}, fen={self.fen})'
 
 
 class Player(db.Model):
@@ -56,7 +79,8 @@ class Move(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     game_id = db.Column(db.ForeignKey('game.id'), nullable=False)
     index = db.Column(db.Integer, nullable=False)
-    coords = db.Column(db.String(10), nullable=False)
+    source = db.Column(db.String(10))
+    target = db.Column(db.String(10))
 
     def __repr__(self):
         return f'Move(game_id={self.game_id}, index={self.index}, coords={self.coords})'

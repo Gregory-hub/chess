@@ -1,14 +1,13 @@
-from datetime import datetime
 from flask import render_template, request, redirect, url_for, flash, send_from_directory
 from flask_login import current_user, logout_user
 from flask_socketio import emit
 
-from chess import app, socketio, logger, clients
+from chess import app, socketio, clients
 from chess.forms import RegistrationForm, LoginForm, StartGameForm
-from chess.auth import sign_in, sign_up, login_on_registration, get_current_client, create_client
+from chess.auth import sign_in, sign_up, login_on_registration, get_current_client, create_client, authentication_required
 from chess.models import User
 from chess.connect import get_matched_users, invite_player
-from chess.game import get_game_conf, create_game, get_my_games
+from chess.game import get_game_conf, create_game, get_my_games, move
 
 
 # sockets
@@ -20,6 +19,7 @@ def connect():
 
 
 @socketio.event
+@authentication_required
 def disconnect():
     client = get_current_client()
     if client:
@@ -33,6 +33,7 @@ def search(query: str):
 
 
 @socketio.event
+@authentication_required
 def invite(data: dict):
     print('\n', data, '\n', type(data), '\n')
     invited_username = data['opponent']
@@ -41,9 +42,10 @@ def invite(data: dict):
 
 
 @socketio.event
-def fen(fen_str: str):
-    print('fen:', fen_str)
-    socketio.emit('fen', fen_str)
+@authentication_required
+def fen_pos(fen_pos: str):
+    game_id = int(request.referrer.split('/')[-1])
+    move(game_id, fen_pos)
 
 
 # routes
@@ -53,10 +55,8 @@ def index():
 
 
 @app.route('/my_games/', methods=['GET'])
+@authentication_required
 def my_games():
-    if not current_user.is_authenticated:
-        flash('You have to login in order to play')
-        return redirect(url_for('login'))
     my_games = get_my_games()
     games = []
     for game in my_games:
@@ -73,20 +73,18 @@ def my_games():
 
 
 @app.route('/game_config/', methods=['GET', 'POST'])
+@authentication_required
 def game_config():
-    if not current_user.is_authenticated:
-        flash('You have to login in order to play')
-        return redirect(url_for('login'))
     form = StartGameForm()
 
     if request.method == 'GET':
         return render_template('game_config.html', form=form)
 
     elif request.method == 'POST' and form.validate():
-        opponent_username=form['opponent'].data
-        supplement=int(form['supplement'].data)
-        length=int(form['game_time'].data)
-        current_player_color=form['player_color'].data
+        opponent_username = form['opponent'].data
+        supplement = int(form['supplement'].data)
+        length = int(form['game_time'].data)
+        current_player_color = form['player_color'].data
 
         game = create_game(
             length=length,
@@ -95,21 +93,14 @@ def game_config():
             current_player_color=current_player_color
         )
 
-        current_player_color = get_game_conf(game.id)['current_player'].color
-        colors = ['white', 'black']
-        colors.remove(current_player_color)
-        opponent_color = colors[0]
-
         return redirect(url_for('game', id=game.id))
 
     return render_template('game_config.html', form=form)
 
 
 @app.route('/game/<int:id>', methods=['GET'])
+@authentication_required
 def game(id: int):
-    if not current_user.is_authenticated:
-        flash('You have to login in order to play')
-        return redirect(url_for('login'))
     game_conf = get_game_conf(id)
     if game_conf:
         return render_template(

@@ -1,7 +1,8 @@
 import re
 import os
+import functools
 
-from flask import request
+from flask import request, flash, redirect, url_for
 from flask_login import login_user, current_user
 
 from chess import UPLOAD_FOLDER, hasher, clients, app, logger
@@ -37,7 +38,7 @@ def sign_up(form):
     username = form.username.data
     email = form.email.data
     password = form.password.data
-    image = request.files['image'] 
+    image = request.files['image']
     password_hash = hasher.generate_password_hash(password).decode()
 
     user = User(
@@ -115,7 +116,6 @@ def allowed_file(file):
 
 
 def upload_image(image, username: str):
-    UPLOAD_FOLDER = app.config['UPLOAD_FOLDER']
     ext = os.path.splitext(image.filename)[1]
     filename = username + ext
     upload_path = os.path.join(UPLOAD_FOLDER, filename)
@@ -123,3 +123,15 @@ def upload_image(image, username: str):
         os.remove(upload_path)
     image.save(upload_path)
     return filename
+
+
+def authentication_required(fun):
+    @functools.wraps(fun)
+    def inner(*args, **kwargs):
+        if not current_user.is_authenticated:
+            flash('Authentication required')
+            return redirect(url_for('login'))
+        else:
+            return fun(*args, **kwargs)
+
+    return inner

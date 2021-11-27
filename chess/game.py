@@ -1,13 +1,15 @@
+from math import ceil
 from random import choice
 from datetime import datetime, timezone, timedelta
 
 from flask_login import current_user
 
-from chess import db
+from chess import db, socketio
 from chess.auth import get_user_from_username_or_email
 from chess.models import Game, Player
 
 
+# game creation
 def create_game(length: int, supplement: int, opponent_username: str, current_player_color: str):
     game = Game(
         start_time=datetime.now(timezone.utc),
@@ -55,4 +57,87 @@ def create_players(opponent_username: str, current_player_color: str):
 
 def get_my_games():
     user = current_user
-    return [player.game for player in user.players]
+    return [player.game for player in user.players if player.game is not None]
+
+
+# move processing
+def move(game_id: int, new_pos: str):
+    game = Game.query.get(game_id)
+
+    if fen_pos_is_valid(new_pos) and move_is_legal(game, fen_pos_to_list(new_pos)):
+        new_fen = get_new_fen(game, new_pos)
+        game.update_fen(new_fen)
+        socketio.emit('fen_pos', new_pos)
+    else:
+        old_pos = game.get_pos()
+        socketio.emit('fen_pos', old_pos)
+
+
+def fen_pos_is_valid(fen_pos: str):
+    rows = fen_pos.split('/')
+    for row in rows:
+        if len(row) > 8:
+            print('Invalid fen_pos')
+            return False
+        for fig in row:
+            if fig not in 'rnbqkpRNBQKP12345678':
+                print('Invalid fen_pos')
+                return False
+    return True
+
+
+def move_is_legal(game: Game, new_pos: list):
+    old_pos = fen_pos_to_list(game.get_pos())
+    # active_color = game.get_active_color()
+    # castling = game.get_castling_availability()
+    # enpassand_target = game.get_enpassand_target()
+    # halfmove_clock = game.get_halfmove_clock()
+    # move_count = game.get_fullmove_number()
+
+    if moves_count(old_pos, new_pos) != 1:
+        return False
+
+    source, target = get_move_fields(old_pos, new_pos)
+    print('Source:', source)
+    print('Target:', target)
+
+    return True
+
+
+def fen_pos_to_list(fen_pos: str):
+    pos_list = [[] for i in range(8)]
+    for i in range(8):
+        for sq in fen_pos.split('/')[i]:
+            if sq.isdigit():
+                pos_list[i].extend(['' for j in range(int(sq))])
+            else:
+                pos_list[i].append(sq)
+    return pos_list
+
+
+def get_new_fen(game: Game, new_pos: str):
+    return new_pos + ' w KQkq - 0 1'
+
+
+def moves_count(old_pos: list, new_pos: list):
+    changes_count = 0
+    for i in range(8):
+        for j in range(8):
+            if old_pos[i][j] != new_pos[i][j]:
+                changes_count += 1
+    return ceil(changes_count / 2)
+
+
+def get_move_fields(old_pos: list, new_pos: list):
+    source, target = None, None
+    for i in range(8):
+        for j in range(8):
+            if old_pos[i][j] != '' and new_pos[i][j] == '':
+                source = squarename(i, j)
+            elif old_pos[i][j] != new_pos[i][j]:
+                target = squarename(i, j)
+    return source, target
+
+
+def squarename(i: int, j: int):
+    return 'abcdefgh'[j] + str(8 - i)

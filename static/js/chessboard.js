@@ -1,7 +1,11 @@
+let socket = io(location.host)
+
 function send_fen(source, target, piece, pos, old_pos, orientation) {
-    let socket = io(location.host)
     let fen = Chessboard.objToFen(pos)
-    socket.emit('fen', fen)
+    if (target == 'offboard') {
+        fen = Chessboard.objToFen(old_pos)
+    }
+    socket.emit('fen_pos', fen)
 }
 
 $(document).ready(function() {
@@ -13,8 +17,9 @@ $(document).ready(function() {
     }
     var board = Chessboard('board', config)
 
-    let socket = io(location.host)
-    socket.on('fen', function(fen) {
+    socket.on('fen_pos', function(fen) {
         board.position(fen)
+        console.log('Fen position: ' + fen)
     })
+
 })

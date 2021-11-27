@@ -1,0 +1,9 @@
+1. move is legal
+    a. color is valid
+    b. position did change
+    c. only one piece moved
+    d. piece didn't move through another one(except knights)
+    e. piece moved to a valid square(individually for different piece types)
+    f. position after move is not check for active player
+2. move delivers checkmate
+3. move delivers check

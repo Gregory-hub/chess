@@ -58,6 +58,22 @@ class Game(db.Model):
         self.fen = new_fen
         db.session.commit()
 
+    def add_move(self, piece: str, source: str, target: str):
+        if self.moves == []:
+            index = 1
+        else:
+            index = self.moves[-1].index + 1
+
+        move = Move(
+            index=index,
+            piece=piece,
+            source=source,
+            target=target
+        )
+        self.moves.append(move)
+
+        db.session.commit()
+
     def __repr__(self):
         return f'Game(players={self.players}, start_time={self.start_time}, game_length={self.game_length}, moves={self.moves}, fen={self.fen})'
 

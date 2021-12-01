@@ -7,6 +7,8 @@ from flask_login import current_user
 from chess import db, socketio
 from chess.auth import get_user_from_username_or_email
 from chess.models import Game, Player
+from chess.pieces import letter_to_piece
+from chess.square import Square
 
 
 # game creation
@@ -64,8 +66,11 @@ def get_my_games():
 # move processing
 def move(game_id: int, new_pos: str):
     game = Game.query.get(game_id)
+    old_pos = game.get_pos()
 
     if fen_pos_is_valid(new_pos) and move_is_legal(game, fen_pos_to_matrix(new_pos)):
+        piece_letter, source, target = get_move_info(fen_pos_to_matrix(old_pos), fen_pos_to_matrix(new_pos))
+        game.add_move(piece_letter, source.name, target.name)
         new_fen = get_new_fen(game, new_pos)
         game.update_fen(new_fen)
         socketio.emit('fen_pos', new_pos)
@@ -97,13 +102,20 @@ def move_is_legal(game: Game, new_pos: list):
     if moves_count(old_pos, new_pos) != 1:
         return False
 
-    piece, source, target = get_move_info(old_pos, new_pos)
-    print('Piece:', piece)
-    print('Source:', source)
-    print('Target:', target)
+    piece_letter, source, target = get_move_info(old_pos, new_pos)
 
-    print('Move color:', move_color(piece))
-    if game.get_active_color() != move_color(piece):
+    piece = letter_to_piece(piece_letter)
+    print('Piece:', piece)
+    print('Piece letter:', piece.letter)
+    print('Valid move:', piece.valid_move(source, target))
+    print('Source:', source.name)
+    print('Target:', target.name)
+    print('Move color:', move_color(piece_letter))
+
+    if game.get_active_color() != move_color(piece_letter):
+        return False
+
+    if not piece.valid_move(source, target):
         return False
 
     return True
@@ -139,14 +151,10 @@ def get_move_info(old_pos: list, new_pos: list):
         for j in range(8):
             if old_pos[i][j] != '' and new_pos[i][j] == '':
                 piece = old_pos[i][j]
-                source = squarename(i, j)
+                source = Square(i, j)
             elif old_pos[i][j] != new_pos[i][j]:
-                target = squarename(i, j)
+                target = Square(i, j)
     return piece, source, target
-
-
-def squarename(i: int, j: int):
-    return 'abcdefgh'[j] + str(8 - i)
 
 
 def move_color(piece: str):

@@ -106,7 +106,8 @@ def game(id: int):
         return render_template(
             'game.html',
             current_player=game_conf['current_player'],
-            opponent=game_conf['opponent']
+            opponent=game_conf['opponent'],
+            fen_pos=game_conf['fen_pos']
         )
     else:
         flash('Error: game does not exist')

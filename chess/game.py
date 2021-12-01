@@ -32,7 +32,8 @@ def get_game_conf(game_id: int):
         'game_length': game.game_length,
         'supplement': game.supplement,
         'current_player': game.players[0] if game.players[0].user == current_user else game.players[1],
-        'opponent': game.players[0] if game.players[0].user != current_user else game.players[1]
+        'opponent': game.players[0] if game.players[0].user != current_user else game.players[1],
+        'fen_pos': game.get_pos()
     } if game else None
     return game_conf
 
@@ -64,7 +65,7 @@ def get_my_games():
 def move(game_id: int, new_pos: str):
     game = Game.query.get(game_id)
 
-    if fen_pos_is_valid(new_pos) and move_is_legal(game, fen_pos_to_list(new_pos)):
+    if fen_pos_is_valid(new_pos) and move_is_legal(game, fen_pos_to_matrix(new_pos)):
         new_fen = get_new_fen(game, new_pos)
         game.update_fen(new_fen)
         socketio.emit('fen_pos', new_pos)
@@ -87,8 +88,7 @@ def fen_pos_is_valid(fen_pos: str):
 
 
 def move_is_legal(game: Game, new_pos: list):
-    old_pos = fen_pos_to_list(game.get_pos())
-    # active_color = game.get_active_color()
+    old_pos = fen_pos_to_matrix(game.get_pos())
     # castling = game.get_castling_availability()
     # enpassand_target = game.get_enpassand_target()
     # halfmove_clock = game.get_halfmove_clock()
@@ -97,22 +97,27 @@ def move_is_legal(game: Game, new_pos: list):
     if moves_count(old_pos, new_pos) != 1:
         return False
 
-    source, target = get_move_fields(old_pos, new_pos)
+    piece, source, target = get_move_info(old_pos, new_pos)
+    print('Piece:', piece)
     print('Source:', source)
     print('Target:', target)
+
+    print('Move color:', move_color(piece))
+    if game.get_active_color() != move_color(piece):
+        return False
 
     return True
 
 
-def fen_pos_to_list(fen_pos: str):
-    pos_list = [[] for i in range(8)]
+def fen_pos_to_matrix(fen_pos: str):
+    pos_matrix = [[] for i in range(8)]
     for i in range(8):
         for sq in fen_pos.split('/')[i]:
             if sq.isdigit():
-                pos_list[i].extend(['' for j in range(int(sq))])
+                pos_matrix[i].extend(['' for j in range(int(sq))])
             else:
-                pos_list[i].append(sq)
-    return pos_list
+                pos_matrix[i].append(sq)
+    return pos_matrix
 
 
 def get_new_fen(game: Game, new_pos: str):
@@ -128,16 +133,23 @@ def moves_count(old_pos: list, new_pos: list):
     return ceil(changes_count / 2)
 
 
-def get_move_fields(old_pos: list, new_pos: list):
-    source, target = None, None
+def get_move_info(old_pos: list, new_pos: list):
+    piece, source, target = None, None, None
     for i in range(8):
         for j in range(8):
             if old_pos[i][j] != '' and new_pos[i][j] == '':
+                piece = old_pos[i][j]
                 source = squarename(i, j)
             elif old_pos[i][j] != new_pos[i][j]:
                 target = squarename(i, j)
-    return source, target
+    return piece, source, target
 
 
 def squarename(i: int, j: int):
     return 'abcdefgh'[j] + str(8 - i)
+
+
+def move_color(piece: str):
+    if piece.isupper():
+        return 'w'
+    return 'b'

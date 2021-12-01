@@ -81,6 +81,7 @@ class Move(db.Model):
     index = db.Column(db.Integer, nullable=False)
     source = db.Column(db.String(10))
     target = db.Column(db.String(10))
+    piece = db.Column(db.String(1))
 
     def __repr__(self):
-        return f'Move(game_id={self.game_id}, index={self.index}, coords={self.coords})'
+        return f'Move(game_id={self.game_id}, index={self.index}, piece={self.piece}, source={self.source}, target={self.target})'

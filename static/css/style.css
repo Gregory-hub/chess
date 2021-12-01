@@ -129,7 +129,7 @@ body {
     height: 40px;
 }
 
-#current_player_color {
+.hidden {
     display: none;
 }
 

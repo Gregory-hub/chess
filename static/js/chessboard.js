@@ -11,7 +11,7 @@ function send_fen(source, target, piece, pos, old_pos, orientation) {
 $(document).ready(function() {
     var config = {
         draggable: true,
-        position: 'start',
+        position: $('#fen_pos').text(),
         orientation: $('#current_player_color').text(),
         onDrop: send_fen
     }

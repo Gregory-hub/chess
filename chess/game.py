@@ -112,8 +112,8 @@ def move_is_legal(game: Game, new_pos: list):
     print('Target:', target.name)
     print('Move color:', move_color(piece_letter))
 
-    if game.get_active_color() != move_color(piece_letter):
-        return False
+    # if game.get_active_color() != move_color(piece_letter):
+    #     return False
 
     if not piece.valid_move(source, target):
         return False

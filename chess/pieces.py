@@ -16,17 +16,40 @@ class Piece(ABC):
 class King(Piece):
     letter = 'k'
 
+    def valid_move(self, source: Square, target: Square):
+        if abs(target.i - source.i) <= 1 and abs(target.j - source.j) <= 1:
+            return True
+        else:
+            return False
+
 
 class Queen(Piece):
     letter = 'q'
+
+    def valid_move(self, source: Square, target: Square):
+        if (source.i == target.i) ^ (source.j == target.j):
+            return True
+        if target.i == target.j + source.i - source.j or target.i == -target.j + source.i + source.j:
+            return True
+        return False
 
 
 class Rook(Piece):
     letter = 'r'
 
+    def valid_move(self, source: Square, target: Square):
+        if (source.i == target.i) ^ (source.j == target.j):
+            return True
+        return False
+
 
 class Bishop(Piece):
     letter = 'b'
+
+    def valid_move(self, source: Square, target: Square):
+        if target.i == target.j + source.i - source.j or target.i == -target.j + source.i + source.j:
+            return True
+        return False
 
 
 class Knight(Piece):

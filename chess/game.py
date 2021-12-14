@@ -117,6 +117,8 @@ def move_is_legal(game: Game, new_pos: list):
 
     if not piece.valid_move(source, target):
         return False
+    if piece.moved_throught_piece(source, target, old_pos):
+        return False
 
     return True
 

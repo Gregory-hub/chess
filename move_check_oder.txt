@@ -2,9 +2,10 @@
     a. color is valid +
     b. position did change +
     c. only one piece moved +
-    d. piece moved to a valid square(individually for different piece types)
-    e. piece didn't move through another one(except knights)
-    f. position after move is not check for active player
+    d. piece moved to a valid square(individually for different piece types) +
+    e. piece didn't move through another one(except knights) +
+    f. piece stands on another one's square(both colors)
+    g. position after move is not check for active player
 2. move delivers checkmate
 3. move delivers check
 

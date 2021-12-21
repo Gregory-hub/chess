@@ -16,7 +16,8 @@ def create_game(length: int, supplement: int, opponent_username: str, current_pl
     game = Game(
         start_time=datetime.now(timezone.utc),
         game_length=timedelta(seconds=length),
-        supplement=timedelta(seconds=supplement)
+        supplement=timedelta(seconds=supplement),
+        fen="rnbkkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBKKBNR w KQkq - 0 1"
     )
     if current_player_color == 'random':
         current_player_color = choice(['black', 'white'])
@@ -97,7 +98,7 @@ def move_is_legal(game: Game, new_pos: list):
     # castling = game.get_castling_availability()
     # enpassand_target = game.get_enpassand_target()
     # halfmove_clock = game.get_halfmove_clock()
-    # move_count = game.get_fullmove_number()
+    # moves_number = game.get_fullmove_number()
 
     if moves_count(old_pos, new_pos) != 1:
         return False
@@ -105,19 +106,21 @@ def move_is_legal(game: Game, new_pos: list):
     piece_letter, source, target = get_move_info(old_pos, new_pos)
 
     piece = letter_to_piece(piece_letter)
-    print('Piece:', piece)
-    print('Piece letter:', piece.letter)
-    print('Valid move:', piece.valid_move(source, target))
-    print('Source:', source.name)
-    print('Target:', target.name)
-    print('Move color:', move_color(piece_letter))
+    if source is not None and target is not None and piece_letter is not None and piece.valid_move(source, target) and not piece.moved_throught_piece(source, target, old_pos) and not takes_their_own_piece(target, old_pos, new_pos):
+        print('Piece:', piece)
+        print('Piece letter:', piece.letter)
+        print('Source:', source.name)
+        print('Target:', target.name)
+        print('Move color:', move_color(piece_letter))
+        print()
 
     # if game.get_active_color() != move_color(piece_letter):
     #     return False
-
     if not piece.valid_move(source, target):
         return False
     if piece.moved_throught_piece(source, target, old_pos):
+        return False
+    if takes_their_own_piece(target, old_pos, new_pos):
         return False
 
     return True
@@ -163,3 +166,18 @@ def move_color(piece: str):
     if piece.isupper():
         return 'w'
     return 'b'
+
+
+def takes_their_own_piece(target: Square, old_pos: list, new_pos: list):
+    if old_pos[target.i][target.j] != "":
+        if move_color(old_pos[target.i][target.j]) == move_color(new_pos[target.i][target.j]):
+            if old_pos[target.i][target.j] != new_pos[target.i][target.j]:
+                return True
+    return False
+
+
+# def takes_opponents_piece(target: Square, old_pos: list, new_pos: list):
+#     if old_pos[target.i][target.j] != "":
+#         if move_color(old_pos[target.i][target.j]) != move_color(new_pos[target.i][target.j]):
+#             return True
+#     return False

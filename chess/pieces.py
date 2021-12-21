@@ -20,6 +20,9 @@ class King(Piece):
     letter = 'k'
 
     def valid_move(self, source: Square, target: Square):
+        if source is None or target is None:
+            return False
+
         if abs(target.i - source.i) <= 1 and abs(target.j - source.j) <= 1:
             return True
         else:
@@ -33,6 +36,9 @@ class Queen(Piece):
     letter = 'q'
 
     def valid_move(self, source: Square, target: Square):
+        if source is None or target is None:
+            return False
+
         if (source.i == target.i) ^ (source.j == target.j):
             return True
         if target.i == target.j + source.i - source.j or target.i == -target.j + source.i + source.j:
@@ -69,6 +75,9 @@ class Rook(Piece):
     letter = 'r'
 
     def valid_move(self, source: Square, target: Square):
+        if source is None or target is None:
+            return False
+
         if (source.i == target.i) ^ (source.j == target.j):
             return True
         return False
@@ -89,6 +98,9 @@ class Bishop(Piece):
     letter = 'b'
 
     def valid_move(self, source: Square, target: Square):
+        if source is None or target is None:
+            return False
+
         if target.i == target.j + source.i - source.j or target.i == -target.j + source.i + source.j:
             return True
         return False
@@ -113,6 +125,9 @@ class Knight(Piece):
     letter = 'n'
 
     def valid_move(self, source: Square, target: Square):
+        if source is None or target is None:
+            return False
+
         if abs(target.i - source.i) == 1 and abs(target.j - source.j) == 2:
             return True
         elif abs(target.i - source.i) == 2 and abs(target.j - source.j) == 1:
@@ -127,6 +142,9 @@ class Pond(Piece):
     letter = 'p'
 
     def valid_move(self, source: Square, target: Square):
+        if source is None or target is None:
+            return False
+
         if self.color == 'w':
 
             if source.i == 7 or target.i == 7:

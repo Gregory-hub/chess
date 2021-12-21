@@ -52,13 +52,15 @@ class Queen(Piece):
                 if i < 8 and pos[i][j] != "":
                     return True
 
-        for j in range(min(source.j, target.j) + 1, max(source.j, target.j)):
-            if pos[source.i][j] != "":
-                return True
+        if target.i == source.i:
+            for j in range(min(source.j, target.j) + 1, max(source.j, target.j)):
+                if pos[source.i][j] != "":
+                    return True
 
-        for i in range(min(source.i, target.i) + 1, max(source.i, target.i)):
-            if pos[i][source.j] != "":
-                return True
+        elif target.j == source.j:
+            for i in range(min(source.i, target.i) + 1, max(source.i, target.i)):
+                if pos[i][source.j] != "":
+                    return True
 
         return False
 

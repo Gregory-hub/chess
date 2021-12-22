@@ -4,20 +4,23 @@
     c. only one piece moved +
     d. piece moved to a valid square(individually for different piece types) +
     e. piece didn't move through another one(except knights) +
-    f. piece stands on another one's square(both colors)
+    f. piece stands on another one's square(both colors) +
     g. position after move is not check for active player
 2. move delivers checkmate
 3. move delivers check
+4. move is castling
+    a. castling is legal
+5. move is En passand
 
-       black
-  0 1 2 3 4 5 6 7
-0 - - - - - - - - 0
-1 - - - - - - - - 1
-2 - - - - - - - - 2
-3 - - - - - - - - 3
-4 - - - - - - - - 4
-5 - - - - - - - - 5
-6 - - - - - - - - 6
-7 - - - - - - - - 7
-  a b c d e f g h
-       white
+           black
+      0 1 2 3 4 5 6 7
+    0 - - - - - - - - 0
+    1 - - - - - - - - 1
+    2 - - - - - - - - 2
+    3 - - - - - - - - 3
+    4 - - - - - - - - 4
+    5 - - - - - - - - 5
+    6 - - - - - - - - 6
+    7 - - - - - - - - 7
+      a b c d e f g h
+           white

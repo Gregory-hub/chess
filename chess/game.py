@@ -114,8 +114,8 @@ def move_is_legal(game: Game, new_pos: list):
         print('Move color:', move_color(piece_letter))
         print()
 
-    # if game.get_active_color() != move_color(piece_letter):
-    #     return False
+    if game.get_active_color() != move_color(piece_letter):
+        return False
     if not piece.valid_move(source, target):
         return False
     if piece.moved_throught_piece(source, target, old_pos):
@@ -137,8 +137,9 @@ def fen_pos_to_matrix(fen_pos: str):
     return pos_matrix
 
 
-def get_new_fen(game: Game, new_pos: str):
-    return new_pos + ' w KQkq - 0 1'
+def get_new_fen(game: Game, new_fen_pos: str):
+    color = "b" if game.get_active_color() == "w" else "w"
+    return new_fen_pos + " " + color + " KQkq - 0 1"
 
 
 def moves_count(old_pos: list, new_pos: list):

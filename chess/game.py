@@ -112,6 +112,7 @@ def move_is_legal(game: Game, new_pos: list):
         print('Source:', source.name)
         print('Target:', target.name)
         print('Move color:', move_color(piece_letter))
+        print('Checks opponent:', piece.delivers_check(target, move_color(piece_letter), new_pos))
         print()
 
     if game.get_active_color() != move_color(piece_letter):
@@ -163,8 +164,8 @@ def get_move_info(old_pos: list, new_pos: list):
     return piece, source, target
 
 
-def move_color(piece: str):
-    if piece.isupper():
+def move_color(piece_let: str):
+    if piece_let.isupper():
         return 'w'
     return 'b'
 

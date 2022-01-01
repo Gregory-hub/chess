@@ -15,6 +15,9 @@ class Piece(ABC):
     def moved_throught_piece(self, source: Square, target: Square, pos: list):
         pass
 
+    def delivers_check(self, target: Square, current_color: str, pos: list):
+        pass
+
 
 class King(Piece):
     letter = 'k'
@@ -29,6 +32,9 @@ class King(Piece):
             return False
 
     def moved_throught_piece(self, source: Square, target: Square, pos: list):
+        return False
+
+    def delivers_check(self, target: Square, current_color: str, pos: list):
         return False
 
 
@@ -70,6 +76,9 @@ class Queen(Piece):
 
         return False
 
+    def delivers_check(self, target: Square, current_color: str, pos: list):
+        pass
+
 
 class Rook(Piece):
     letter = 'r'
@@ -93,6 +102,54 @@ class Rook(Piece):
 
         return False
 
+    def delivers_check(self, target: Square, current_color: str, pos: list):
+        empty_up = True
+        empty_down = True
+        empty_left = True
+        empty_right = True
+
+        if current_color == 'b':
+            king_let = 'K'
+        elif current_color == 'w':
+            king_let = 'k'
+        else:
+            raise ValueError("Color can be only 'b' or 'w'")
+
+        for k in range(1, 8):
+            if empty_up and 0 <= target.i + k <= 7 and pos[target.i + k][target.j] != "":
+                print('up', pos[target.i + k][target.j])
+                if pos[target.i + k][target.j] == king_let:
+                    return True
+                else:
+                    empty_up = False
+
+            if empty_down and 0 <= target.i - k <= 7 and pos[target.i - k][target.j] != "":
+                print('down', pos[target.i - k][target.j])
+                if pos[target.i - k][target.j] == king_let:
+                    return True
+                else:
+                    empty_down = False
+
+            if empty_right and 0 <= target.j + k <= 7 and pos[target.i][target.j + k] != "":
+                print('right', pos[target.i][target.j + k])
+                if pos[target.i][target.j + k] == king_let:
+                    return True
+                else:
+                    empty_right = False
+
+            if empty_left and 0 <= target.j - k <= 7 and pos[target.i][target.j - k] != "":
+                print('left', pos[target.i][target.j - k])
+                if pos[target.i][target.j - k] == king_let:
+                    return True
+                else:
+                    empty_left = False
+
+            if not empty_up and not empty_down and not empty_left and not empty_right:
+                print(k, ': break')
+                break
+
+        return False
+
 
 class Bishop(Piece):
     letter = 'b'
@@ -107,18 +164,20 @@ class Bishop(Piece):
 
     def moved_throught_piece(self, source: Square, target: Square, pos: list):
         left_sq, right_sq = min(source.j, target.j), max(source.j, target.j)
-        if source.i > target.i and source.j < target.j or source.i < target.i and source.j > target.j:  # y = -x + b
+        if source.i > target.i and source.j < target.j or source.i < target.i and source.j > target.j:
             for j in range(left_sq + 1, right_sq):
-                i = -j + source.i + source.j
+                i = -j + source.i + source.j    # y = -x + b
                 if i < 8 and pos[i][j] != "":
                     return True
-        else:                           # y = x + b
+        else:
             for j in range(left_sq + 1, right_sq):
-                i = j + source.i - source.j
+                i = j + source.i - source.j     # y = x + b
                 if i < 8 and pos[i][j] != "":
                     return True
-
         return False
+
+    def delivers_check(self, target: Square, current_color: str, pos: list):
+        pass
 
 
 class Knight(Piece):

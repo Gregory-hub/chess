@@ -17,7 +17,7 @@ def create_game(length: int, supplement: int, opponent_username: str, current_pl
         start_time=datetime.now(timezone.utc),
         game_length=timedelta(seconds=length),
         supplement=timedelta(seconds=supplement),
-        fen="rnbkkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBKKBNR w KQkq - 0 1"
+        fen="3qk3/8/8/8/8/8/8/3QK3 w KQkq - 0 1"    # "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1"
     )
     if current_player_color == 'random':
         current_player_color = choice(['black', 'white'])
@@ -116,12 +116,16 @@ def move_is_legal(game: Game, new_pos: list):
         print()
 
     if game.get_active_color() != move_color(piece_letter):
+        print("Invalid color")
         return False
     if not piece.valid_move(source, target):
+        print("Invalid move")
         return False
     if piece.moved_throught_piece(source, target, old_pos):
+        print("Moved throught piece")
         return False
     if takes_their_own_piece(target, old_pos, new_pos):
+        print("Takes wrong piece")
         return False
 
     return True

@@ -110,13 +110,20 @@ def move_is_legal(game: Game, old_pos: list, new_pos: list):
         return False
 
     piece, source, target = get_move_info(old_pos, new_pos)
+    kings = find_kings(new_pos)
+    check = False
+    for king in kings:
+        king_sq = king[1]
+        if king[0].in_check(king_sq, new_pos):
+            check = True
+
     if source and target and piece:
         print('Piece:', piece)
         print('Piece letter:', piece.letter)
         print('Source:', source.name)
         print('Target:', target.name)
         print('Move color:', piece.color)
-        print('Checks opponent:', piece.delivers_check(target, piece.color, new_pos))
+        print('King checked:', check)
         print()
 
     if game.get_active_color() != piece.color:
@@ -179,3 +186,12 @@ def takes_their_own_piece(target: Square, old_pos: list, new_pos: list):
 def takes_king(target: Square, old_pos: list, new_pos: list):
     if isinstance(old_pos[target.i][target.j], King) and new_pos[target.i][target.j] != old_pos[target.i][target.j]:
         return True
+
+
+def find_kings(pos: list):
+    kings = []
+    for i in range(8):
+        for j in range(8):
+            if isinstance(pos[i][j], King):
+                kings.append([pos[i][j], Square(i, j)])
+    return kings

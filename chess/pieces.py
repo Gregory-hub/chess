@@ -18,9 +18,6 @@ class Piece(ABC):
     def moved_throught_piece(self, source: Square, target: Square, pos: list):
         pass
 
-    def delivers_check(self, target: Square, current_color: str, pos: list):
-        pass
-
     def __eq__(self, other):
         if self is None and other is None:
             return True
@@ -45,7 +42,95 @@ class King(Piece):
     def moved_throught_piece(self, source: Square, target: Square, pos: list):
         return False
 
-    def delivers_check(self, target: Square, current_color: str, pos: list):
+    def in_check(self, target: Square, pos: list):
+        empty_up_l = True
+        empty_down_l = True
+        empty_up_r = True
+        empty_down_r = True
+        empty_up = True
+        empty_down = True
+        empty_left = True
+        empty_right = True
+
+        for k in range(1, 8):
+            if empty_up_l and 0 <= target.i + k <= 7 and 0 <= target.j - k <= 7 and pos[target.i + k][target.j - k] is not None:
+                if (isinstance(pos[target.i + k][target.j - k], Bishop) or isinstance(pos[target.i + k][target.j - k], Queen)) and pos[target.i + k][target.j - k].color != self.color:
+                    return True
+                else:
+                    empty_up_l = False
+
+            if empty_down_l and 0 <= target.i - k <= 7 and 0 <= target.j - k <= 7 and pos[target.i - k][target.j - k] is not None:
+                if (isinstance(pos[target.i - k][target.j - k], Bishop) or isinstance(pos[target.i - k][target.j - k], Queen)) and pos[target.i - k][target.j - k].color != self.color:
+                    return True
+                else:
+                    empty_down_l = False
+
+            if empty_up_r and 0 <= target.i + k <= 7 and 0 <= target.j + k <= 7 and pos[target.i + k][target.j + k] is not None:
+                if (isinstance(pos[target.i + k][target.j + k], Bishop) or isinstance(pos[target.i + k][target.j + k], Queen)) and pos[target.i + k][target.j + k].color != self.color:
+                    return True
+                else:
+                    empty_up_r = False
+
+            if empty_down_r and 0 <= target.i - k <= 7 and 0 <= target.j + k <= 7 and pos[target.i - k][target.j + k] is not None:
+                if (isinstance(pos[target.i - k][target.j + k], Bishop) or isinstance(pos[target.i - k][target.j + k], Queen)) and pos[target.i - k][target.j + k].color != self.color:
+                    return True
+                else:
+                    empty_down_r = False
+
+            if empty_up and 0 <= target.i + k <= 7 and pos[target.i + k][target.j] is not None:
+                if (isinstance(pos[target.i + k][target.j], Rook) or isinstance(pos[target.i + k][target.j], Queen)) and pos[target.i + k][target.j].color != self.color:
+                    return True
+                else:
+                    empty_up = False
+
+            if empty_down and 0 <= target.i - k <= 7 and pos[target.i - k][target.j] is not None:
+                if (isinstance(pos[target.i - k][target.j], Rook) or isinstance(pos[target.i - k][target.j], Queen)) and pos[target.i - k][target.j].color != self.color:
+                    return True
+                else:
+                    empty_down = False
+
+            if empty_right and 0 <= target.j + k <= 7 and pos[target.i][target.j + k] is not None:
+                if (isinstance(pos[target.i][target.j + k], Rook) or isinstance(pos[target.i][target.j + k], Queen)) and pos[target.i][target.j + k].color != self.color:
+                    return True
+                else:
+                    empty_right = False
+
+            if empty_left and 0 <= target.j - k <= 7 and pos[target.i][target.j - k] is not None:
+                if (isinstance(pos[target.i][target.j - k], Rook) or isinstance(pos[target.i][target.j - k], Queen)) and pos[target.i][target.j - k].color != self.color:
+                    return True
+                else:
+                    empty_left = False
+
+            if not empty_up and not empty_down and not empty_left and not empty_right:
+                break
+
+        if target.i >= 2 and target.j >= 1 and isinstance(pos[target.i - 2][target.j - 1], Knight) and pos[target.i - 2][target.j - 1].color != self.color:
+            return True
+        elif target.i >= 2 and target.j <= 6 and isinstance(pos[target.i - 2][target.j + 1], Knight) and pos[target.i - 2][target.j + 1].color != self.color:
+            return True
+        elif target.i >= 1 and target.j <= 5 and isinstance(pos[target.i - 1][target.j + 2], Knight) and pos[target.i - 1][target.j + 2].color != self.color:
+            return True
+        elif target.i <= 6 and target.j <= 5 and isinstance(pos[target.i + 1][target.j + 2], Knight) and pos[target.i + 1][target.j + 2].color != self.color:
+            return True
+        elif target.i <= 5 and target.j <= 6 and isinstance(pos[target.i + 2][target.j + 1], Knight) and pos[target.i + 2][target.j + 1].color != self.color:
+            return True
+        elif target.i <= 5 and target.j >= 1 and isinstance(pos[target.i + 2][target.j - 1], Knight) and pos[target.i + 2][target.j - 1].color != self.color:
+            return True
+        elif target.i <= 6 and target.j >= 2 and isinstance(pos[target.i + 1][target.j - 2], Knight) and pos[target.i + 1][target.j - 2].color != self.color:
+            return True
+        elif target.i >= 1 and target.j >= 2 and isinstance(pos[target.i - 1][target.j - 2], Knight) and pos[target.i - 1][target.j - 2].color != self.color:
+            return True
+
+        if target.j > 0 and target.i < 7 and isinstance(pos[target.i + 1][target.j - 1], Pond) and pos[target.i + 1][target.j - 1].color != self.color:
+            return True
+        elif target.j < 7 and target.i < 7 and isinstance(pos[target.i + 1][target.j + 1], Pond) and pos[target.i + 1][target.j + 1].color != self.color:
+            return True
+
+        if target.j > 0 and target.i > 0 and isinstance(pos[target.i - 1][target.j - 1], Pond) and pos[target.i - 1][target.j - 1].color != self.color:
+            return True
+        elif target.j < 7 and target.i > 0 and isinstance(pos[target.i - 1][target.j + 1], Pond) and pos[target.i - 1][target.j + 1].color != self.color:
+            return True
+
         return False
 
 
@@ -92,74 +177,6 @@ class Queen(Piece):
 
         return False
 
-    def delivers_check(self, target: Square, current_color: str, pos: list):
-        empty_up_l = True
-        empty_down_l = True
-        empty_up_r = True
-        empty_down_r = True
-        empty_up = True
-        empty_down = True
-        empty_left = True
-        empty_right = True
-
-        if current_color not in ['w', 'b']:
-            raise ColorError(color=current_color)
-        king = King(color='w' if current_color == 'b' else 'w')
-
-        for k in range(1, 8):
-            if empty_up_l and 0 <= target.i + k <= 7 and 0 <= target.j - k <= 7 and pos[target.i + k][target.j - k] is not None:
-                if pos[target.i + k][target.j - k] == king:
-                    return True
-                else:
-                    empty_up_l = False
-
-            if empty_down_l and 0 <= target.i - k <= 7 and 0 <= target.j - k <= 7 and pos[target.i - k][target.j - k] is not None:
-                if pos[target.i - k][target.j - k] == king:
-                    return True
-                else:
-                    empty_down_l = False
-
-            if empty_up_r and 0 <= target.i + k <= 7 and 0 <= target.j + k <= 7 and pos[target.i + k][target.j + k] is not None:
-                if pos[target.i + k][target.j + k] == king:
-                    return True
-                else:
-                    empty_up_r = False
-
-            if empty_down_r and 0 <= target.i - k <= 7 and 0 <= target.j + k <= 7 and pos[target.i - k][target.j + k] is not None:
-                if pos[target.i - k][target.j + k] == king:
-                    return True
-                else:
-                    empty_down_r = False
-
-            if empty_up and 0 <= target.i + k <= 7 and pos[target.i + k][target.j] is not None:
-                if pos[target.i + k][target.j] == king:
-                    return True
-                else:
-                    empty_up = False
-
-            if empty_down and 0 <= target.i - k <= 7 and pos[target.i - k][target.j] is not None:
-                if pos[target.i - k][target.j] == king:
-                    return True
-                else:
-                    empty_down = False
-
-            if empty_right and 0 <= target.j + k <= 7 and pos[target.i][target.j + k] is not None:
-                if pos[target.i][target.j + k] == king:
-                    return True
-                else:
-                    empty_right = False
-
-            if empty_left and 0 <= target.j - k <= 7 and pos[target.i][target.j - k] is not None:
-                if pos[target.i][target.j - k] == king:
-                    return True
-                else:
-                    empty_left = False
-
-            if not empty_up and not empty_down and not empty_left and not empty_right:
-                break
-
-        return False
-
 
 class Rook(Piece):
     letter = 'r'
@@ -180,46 +197,6 @@ class Rook(Piece):
         for i in range(min(source.i, target.i) + 1, max(source.i, target.i)):
             if pos[i][source.j] is not None:
                 return True
-
-        return False
-
-    def delivers_check(self, target: Square, current_color: str, pos: list):
-        empty_up = True
-        empty_down = True
-        empty_left = True
-        empty_right = True
-
-        if current_color not in ['w', 'b']:
-            raise ColorError(color=current_color)
-        king = King(color='w' if current_color == 'b' else 'w')
-
-        for k in range(1, 8):
-            if empty_up and 0 <= target.i + k <= 7 and pos[target.i + k][target.j] is not None:
-                if pos[target.i + k][target.j] == king:
-                    return True
-                else:
-                    empty_up = False
-
-            if empty_down and 0 <= target.i - k <= 7 and pos[target.i - k][target.j] is not None:
-                if pos[target.i - k][target.j] == king:
-                    return True
-                else:
-                    empty_down = False
-
-            if empty_right and 0 <= target.j + k <= 7 and pos[target.i][target.j + k] is not None:
-                if pos[target.i][target.j + k] == king:
-                    return True
-                else:
-                    empty_right = False
-
-            if empty_left and 0 <= target.j - k <= 7 and pos[target.i][target.j - k] is not None:
-                if pos[target.i][target.j - k] == king:
-                    return True
-                else:
-                    empty_left = False
-
-            if not empty_up and not empty_down and not empty_left and not empty_right:
-                break
 
         return False
 
@@ -249,46 +226,6 @@ class Bishop(Piece):
                     return True
         return False
 
-    def delivers_check(self, target: Square, current_color: str, pos: list):
-        empty_up_l = True
-        empty_down_l = True
-        empty_up_r = True
-        empty_down_r = True
-
-        if current_color not in ['w', 'b']:
-            raise ColorError(color=current_color)
-        king = King(color='w' if current_color == 'b' else 'w')
-
-        for k in range(1, 8):
-            if empty_up_l and 0 <= target.i + k <= 7 and 0 <= target.j - k <= 7 and pos[target.i + k][target.j - k] is not None:
-                if pos[target.i + k][target.j - k] == king:
-                    return True
-                else:
-                    empty_up_l = False
-
-            if empty_down_l and 0 <= target.i - k <= 7 and 0 <= target.j - k <= 7 and pos[target.i - k][target.j - k] is not None:
-                if pos[target.i - k][target.j - k] == king:
-                    return True
-                else:
-                    empty_down_l = False
-
-            if empty_up_r and 0 <= target.i + k <= 7 and 0 <= target.j + k <= 7 and pos[target.i + k][target.j + k] is not None:
-                if pos[target.i + k][target.j + k] == king:
-                    return True
-                else:
-                    empty_up_r = False
-
-            if empty_down_r and 0 <= target.i - k <= 7 and 0 <= target.j + k <= 7 and pos[target.i - k][target.j + k] is not None:
-                if pos[target.i - k][target.j + k] == king:
-                    return True
-                else:
-                    empty_down_r = False
-
-            if not empty_up_l and not empty_down_l and not empty_up_r and not empty_down_r:
-                break
-
-        return False
-
 
 class Knight(Piece):
     letter = 'n'
@@ -304,30 +241,6 @@ class Knight(Piece):
         return False
 
     def moved_throught_piece(self, source: Square, target: Square, pos: list):
-        return False
-
-    def delivers_check(self, target: Square, current_color: str, pos: list):
-        if current_color not in ['w', 'b']:
-            raise ColorError(color=current_color)
-        king = King(color='w' if current_color == 'b' else 'w')
-
-        if target.i >= 2 and target.j >= 1 and pos[target.i - 2][target.j - 1] == king:
-            return True
-        elif target.i >= 2 and target.j <= 6 and pos[target.i - 2][target.j + 1] == king:
-            return True
-        elif target.i >= 1 and target.j <= 5 and pos[target.i - 1][target.j + 2] == king:
-            return True
-        elif target.i <= 6 and target.j <= 5 and pos[target.i + 1][target.j + 2] == king:
-            return True
-        elif target.i <= 5 and target.j <= 6 and pos[target.i + 2][target.j + 1] == king:
-            return True
-        elif target.i <= 5 and target.j >= 1 and pos[target.i + 2][target.j - 1] == king:
-            return True
-        elif target.i <= 6 and target.j >= 2 and pos[target.i + 1][target.j - 2] == king:
-            return True
-        elif target.i >= 1 and target.j >= 2 and pos[target.i - 1][target.j - 2] == king:
-            return True
-
         return False
 
 
@@ -376,24 +289,6 @@ class Pond(Piece):
         if abs(source.i - target.i) == 2 and pos[(source.i + target.i) // 2][source.j] is not None:
             return True
 
-        return False
-
-    def delivers_check(self, target: Square, current_color: str, pos: list):
-        if current_color not in ['w', 'b']:
-            raise ColorError(color=current_color)
-        king = King(color='w' if current_color == 'b' else 'w')
-
-        if target.i not in [0, 7]:
-            if current_color == 'b':
-                if target.j > 0 and pos[target.i + 1][target.j - 1] == king:
-                    return True
-                elif target.j < 7 and pos[target.i + 1][target.j + 1] == king:
-                    return True
-            elif current_color == 'w':
-                if target.j > 0 and pos[target.i - 1][target.j - 1] == king:
-                    return True
-                elif target.j < 7 and pos[target.i - 1][target.j + 1] == king:
-                    return True
         return False
 
 

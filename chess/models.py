@@ -69,7 +69,7 @@ class Game(db.Model):
             index=index,
             piece=piece,
             source=source,
-            target=target
+            target=target,
         )
         self.moves.append(move)
 

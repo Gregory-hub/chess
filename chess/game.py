@@ -7,7 +7,7 @@ from flask_login import current_user
 from chess import db, socketio
 from chess.auth import get_user_from_username_or_email
 from chess.models import Game, Player
-from chess.pieces import letter_to_piece
+from chess.pieces import letter_to_piece, King
 from chess.square import Square
 
 
@@ -131,6 +131,9 @@ def move_is_legal(game: Game, old_pos: list, new_pos: list):
     if takes_their_own_piece(target, old_pos, new_pos):
         print("Takes wrong piece")
         return False
+    if takes_king(target, old_pos, new_pos):
+        print("Takes king")
+        return False
 
     return True
 
@@ -171,3 +174,8 @@ def takes_their_own_piece(target: Square, old_pos: list, new_pos: list):
     i = target.i
     j = target.j
     return old_pos[i][j] and new_pos[i][j] and old_pos[i][j].color == new_pos[i][j].color
+
+
+def takes_king(target: Square, old_pos: list, new_pos: list):
+    if isinstance(old_pos[target.i][target.j], King) and new_pos[target.i][target.j] != old_pos[target.i][target.j]:
+        return True

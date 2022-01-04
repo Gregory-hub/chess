@@ -36,7 +36,7 @@ class Game(db.Model):
     players = db.relationship('Player', backref='game')
     moves = db.relationship('Move', backref='game')
 
-    def get_pos(self):
+    def get_fen_pos(self):
         return self.fen.split()[0]
 
     def get_active_color(self):
@@ -54,8 +54,9 @@ class Game(db.Model):
     def get_fullmove_number(self):
         return self.fen.split()[5]
 
-    def update_fen(self, new_fen: str):
-        self.fen = new_fen
+    def update_fen(self, new_fen_pos: str):
+        color = "b" if self.get_active_color() == "w" else "w"
+        self.fen = new_fen_pos + " " + color + " KQkq - 0 1"
         db.session.commit()
 
     def add_move(self, piece: str, source: str, target: str):

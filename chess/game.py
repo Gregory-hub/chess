@@ -36,7 +36,7 @@ def get_game_conf(game_id: int):
         'supplement': game.supplement,
         'current_player': game.players[0] if game.players[0].user == current_user else game.players[1],
         'opponent': game.players[0] if game.players[0].user != current_user else game.players[1],
-        'fen_pos': game.get_pos()
+        'fen_pos': game.get_fen_pos()
     } if game else None
     return game_conf
 
@@ -65,19 +65,26 @@ def get_my_games():
 
 
 # move processing
-def move(game_id: int, new_pos: str):
+def move(game_id: int, new_fen_pos: str):
     game = Game.query.get(game_id)
-    old_pos = game.get_pos()
+    old_fen_pos = game.get_fen_pos()
+    old_pos = get_pos(old_fen_pos)
+    new_pos = get_pos(new_fen_pos)
+    for i in range(8):
+        for j in range(8):
+            print(old_pos[i][j].letter if old_pos[i][j] is not None else '*', end=' ')
+        print(end=' ' * 2)
+        for j in range(8):
+            print(new_pos[i][j].letter if new_pos[i][j] is not None else '*', end=' ')
+        print()
 
-    if fen_pos_is_valid(new_pos) and move_is_legal(game, fen_pos_to_matrix(new_pos)):
-        piece_letter, source, target = get_move_info(fen_pos_to_matrix(old_pos), fen_pos_to_matrix(new_pos))
-        game.add_move(piece_letter, source.name, target.name)
-        new_fen = get_new_fen(game, new_pos)
-        game.update_fen(new_fen)
-        socketio.emit('fen_pos', new_pos)
+    if fen_pos_is_valid(new_fen_pos) and move_is_legal(game, old_pos, new_pos):
+        piece, source, target = get_move_info(old_pos, new_pos)
+        game.add_move(piece.letter, source.name, target.name)
+        game.update_fen(new_fen_pos)
+        socketio.emit('fen_pos', new_fen_pos)
     else:
-        old_pos = game.get_pos()
-        socketio.emit('fen_pos', old_pos)
+        socketio.emit('fen_pos', old_fen_pos)
 
 
 def fen_pos_is_valid(fen_pos: str):
@@ -93,8 +100,7 @@ def fen_pos_is_valid(fen_pos: str):
     return True
 
 
-def move_is_legal(game: Game, new_pos: list):
-    old_pos = fen_pos_to_matrix(game.get_pos())
+def move_is_legal(game: Game, old_pos: list, new_pos: list):
     # castling = game.get_castling_availability()
     # enpassand_target = game.get_enpassand_target()
     # halfmove_clock = game.get_halfmove_clock()
@@ -103,19 +109,17 @@ def move_is_legal(game: Game, new_pos: list):
     if moves_count(old_pos, new_pos) != 1:
         return False
 
-    piece_letter, source, target = get_move_info(old_pos, new_pos)
-
-    piece = letter_to_piece(piece_letter)
-    if source is not None and target is not None and piece_letter is not None and piece.valid_move(source, target) and not piece.moved_throught_piece(source, target, old_pos) and not takes_their_own_piece(target, old_pos, new_pos):
+    piece, source, target = get_move_info(old_pos, new_pos)
+    if source and target and piece:
         print('Piece:', piece)
         print('Piece letter:', piece.letter)
         print('Source:', source.name)
         print('Target:', target.name)
-        print('Move color:', move_color(piece_letter))
-        print('Checks opponent:', piece.delivers_check(target, move_color(piece_letter), new_pos))
+        print('Move color:', piece.color)
+        print('Checks opponent:', piece.delivers_check(target, piece.color, new_pos))
         print()
 
-    if game.get_active_color() != move_color(piece_letter):
+    if game.get_active_color() != piece.color:
         print("Invalid color")
         return False
     if not piece.valid_move(source, target):
@@ -131,20 +135,15 @@ def move_is_legal(game: Game, new_pos: list):
     return True
 
 
-def fen_pos_to_matrix(fen_pos: str):
+def get_pos(fen_pos: str):
     pos_matrix = [[] for i in range(8)]
     for i in range(8):
         for sq in fen_pos.split('/')[i]:
             if sq.isdigit():
-                pos_matrix[i].extend(['' for j in range(int(sq))])
+                pos_matrix[i].extend([None for j in range(int(sq))])
             else:
-                pos_matrix[i].append(sq)
+                pos_matrix[i].append(letter_to_piece(sq))
     return pos_matrix
-
-
-def get_new_fen(game: Game, new_fen_pos: str):
-    color = "b" if game.get_active_color() == "w" else "w"
-    return new_fen_pos + " " + color + " KQkq - 0 1"
 
 
 def moves_count(old_pos: list, new_pos: list):
@@ -160,7 +159,7 @@ def get_move_info(old_pos: list, new_pos: list):
     piece, source, target = None, None, None
     for i in range(8):
         for j in range(8):
-            if old_pos[i][j] != '' and new_pos[i][j] == '':
+            if old_pos[i][j] is not None and new_pos[i][j] is None:
                 piece = old_pos[i][j]
                 source = Square(i, j)
             elif old_pos[i][j] != new_pos[i][j]:
@@ -168,22 +167,7 @@ def get_move_info(old_pos: list, new_pos: list):
     return piece, source, target
 
 
-def move_color(piece_let: str):
-    if piece_let.isupper():
-        return 'w'
-    return 'b'
-
-
 def takes_their_own_piece(target: Square, old_pos: list, new_pos: list):
-    if old_pos[target.i][target.j] != "":
-        if move_color(old_pos[target.i][target.j]) == move_color(new_pos[target.i][target.j]):
-            if old_pos[target.i][target.j] != new_pos[target.i][target.j]:
-                return True
-    return False
-
-
-# def takes_opponents_piece(target: Square, old_pos: list, new_pos: list):
-#     if old_pos[target.i][target.j] != "":
-#         if move_color(old_pos[target.i][target.j]) != move_color(new_pos[target.i][target.j]):
-#             return True
-#     return False
+    i = target.i
+    j = target.j
+    return old_pos[i][j] and new_pos[i][j] and old_pos[i][j].color == new_pos[i][j].color

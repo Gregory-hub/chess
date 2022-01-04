@@ -1,10 +1,13 @@
 from abc import ABC
 
 from chess.square import Square
+from chess.excepitons import ColorError
 
 
 class Piece(ABC):
     def __init__(self, color: str):
+        if color not in ['w', 'b']:
+            raise ColorError(color=color)
         self.color = color
         if color == 'w':
             self.letter = self.letter.upper()
@@ -17,6 +20,9 @@ class Piece(ABC):
 
     def delivers_check(self, target: Square, current_color: str, pos: list):
         pass
+
+    def __eq__(self, other):
+        return self.letter == other.letter and self.color == other.color
 
 
 class King(Piece):
@@ -96,7 +102,7 @@ class Queen(Piece):
         elif current_color == 'w':
             king_let = 'k'
         else:
-            raise ValueError("Color can be only 'b' or 'w'")
+            raise ColorError(color=current_color)
 
         for k in range(1, 8):
             if empty_up_l and 0 <= target.i + k <= 7 and 0 <= target.j - k <= 7 and pos[target.i + k][target.j - k] != "":
@@ -186,7 +192,7 @@ class Rook(Piece):
         elif current_color == 'w':
             king_let = 'k'
         else:
-            raise ValueError("Color can be only 'b' or 'w'")
+            raise ColorError(color=current_color)
 
         for k in range(1, 8):
             if empty_up and 0 <= target.i + k <= 7 and pos[target.i + k][target.j] != "":
@@ -255,7 +261,7 @@ class Bishop(Piece):
         elif current_color == 'w':
             king_let = 'k'
         else:
-            raise ValueError("Color can be only 'b' or 'w'")
+            raise ColorError(color=current_color)
 
         for k in range(1, 8):
             if empty_up_l and 0 <= target.i + k <= 7 and 0 <= target.j - k <= 7 and pos[target.i + k][target.j - k] != "":
@@ -310,7 +316,7 @@ class Knight(Piece):
         elif current_color == 'w':
             king_let = 'k'
         else:
-            raise ValueError("Color can be only 'b' or 'w'")
+            raise ColorError(color=current_color)
 
         if target.i >= 2 and target.j >= 1 and pos[target.i - 2][target.j - 1] == king_let:
             return True
@@ -385,7 +391,7 @@ class Pond(Piece):
         elif current_color == 'w':
             king_let = 'k'
         else:
-            raise ValueError("Color can be only 'b' or 'w'")
+            raise ColorError(color=current_color)
 
         if target.i not in [0, 7]:
             if current_color == 'b':

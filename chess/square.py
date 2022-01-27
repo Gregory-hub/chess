@@ -6,4 +6,6 @@ class Square:
 
 
 def squarename(i: int, j: int):
-    return 'abcdefgh'[j] + str(8 - i)
+    if j > 7 or i > 7:
+        return "Err"
+    return "abcdefgh"[j] + str(8 - i)

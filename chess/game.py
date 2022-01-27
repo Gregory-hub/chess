@@ -7,7 +7,7 @@ from flask_login import current_user
 from chess import db, socketio
 from chess.auth import get_user_from_username_or_email
 from chess.models import Game, Player
-from chess.pieces import letter_to_piece, King
+from chess.pieces import letter_to_piece, King, Pond
 from chess.square import Square
 
 
@@ -17,7 +17,6 @@ def create_game(length: int, supplement: int, opponent_username: str, current_pl
         start_time=datetime.now(timezone.utc),
         game_length=timedelta(seconds=length),
         supplement=timedelta(seconds=supplement),
-        fen="3qk3/8/8/8/8/8/8/3QK3 w KQkq - 0 1"    # "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1"
     )
     if current_player_color == 'random':
         current_player_color = choice(['black', 'white'])
@@ -112,10 +111,12 @@ def move_is_legal(game: Game, old_pos: list, new_pos: list):
     piece, source, target = get_move_info(old_pos, new_pos)
     kings = find_kings(new_pos)
     check = False
+    checked_king = [None, None]
     for king in kings:
         king_sq = king[1]
         if king[0].in_check(king_sq, new_pos):
             check = True
+            checked_king = king
 
     if source and target and piece:
         print('Piece:', piece)
@@ -123,7 +124,7 @@ def move_is_legal(game: Game, old_pos: list, new_pos: list):
         print('Source:', source.name)
         print('Target:', target.name)
         print('Move color:', piece.color)
-        print('King checked:', check)
+        print('Check:', check)
         print()
 
     if game.get_active_color() != piece.color:
@@ -140,6 +141,15 @@ def move_is_legal(game: Game, old_pos: list, new_pos: list):
         return False
     if takes_king(target, old_pos, new_pos):
         print("Takes king")
+        return False
+    if check and checked_king[0].color == piece.color:
+        print("Cannot move this because it's check")
+        return False
+    if isinstance(piece, Pond) and not pond_takes_in_valid_way(source, target, old_pos):
+        print("Pond tries to take piece in front")
+        return False
+    if isinstance(piece, Pond) and not valid_diagonal_pond_move(source, target, old_pos):
+        print("Pond steps on empty square diagonally")
         return False
 
     return True
@@ -195,3 +205,15 @@ def find_kings(pos: list):
             if isinstance(pos[i][j], King):
                 kings.append([pos[i][j], Square(i, j)])
     return kings
+
+
+def pond_takes_in_valid_way(source: Square, target: Square, old_pos: list):
+    if source.j == target.j and old_pos[target.i][target.j] is not None:
+        return False
+    return True
+
+
+def valid_diagonal_pond_move(source: Square, target: Square, old_pos: list):
+    if abs(source.j - target.j) == 1 and old_pos[target.i][target.j] is None:
+        return False
+    return True

@@ -42,6 +42,20 @@ class King(Piece):
     def moved_throught_piece(self, source: Square, target: Square, pos: list):
         return False
 
+    def __sq_contains_piece(self, sq: Square, pos: list, evil_pieces: list):
+        not_empty = False
+        evil_piece = False
+        is_check = False
+        if 0 <= sq.i <= 7 and 0 <= sq.j <= 7 and pos[sq.i][sq.j] is not None:
+            not_empty = True
+            for piece in evil_pieces:
+                if isinstance(pos[sq.i][sq.j], piece):
+                    evil_piece = True
+                    break
+            if evil_piece and pos[sq.i][sq.j].color != self.color:
+                is_check = True
+        return not_empty, is_check
+
     def in_check(self, target: Square, pos: list):
         empty_up_l = True
         empty_down_l = True
@@ -52,73 +66,94 @@ class King(Piece):
         empty_left = True
         empty_right = True
 
+        diagonal_pieces = [Bishop, Queen]
+        straight_pieces = [Rook, Queen]
+
         for k in range(1, 8):
-            if empty_up_l and 0 <= target.i + k <= 7 and 0 <= target.j - k <= 7 and pos[target.i + k][target.j - k] is not None:
-                if (isinstance(pos[target.i + k][target.j - k], Bishop) or isinstance(pos[target.i + k][target.j - k], Queen)) and pos[target.i + k][target.j - k].color != self.color:
+            sq = Square(target.i + k, target.j - k)
+            not_empty, is_check = self.__sq_contains_piece(sq, pos, diagonal_pieces)
+            if empty_up_l and not_empty:
+                empty_up_l = False
+                if is_check:
                     return True
-                else:
-                    empty_up_l = False
 
-            if empty_down_l and 0 <= target.i - k <= 7 and 0 <= target.j - k <= 7 and pos[target.i - k][target.j - k] is not None:
-                if (isinstance(pos[target.i - k][target.j - k], Bishop) or isinstance(pos[target.i - k][target.j - k], Queen)) and pos[target.i - k][target.j - k].color != self.color:
+            sq = Square(target.i - k, target.j - k)
+            not_empty, is_check = self.__sq_contains_piece(sq, pos, diagonal_pieces)
+            if empty_down_l and not_empty:
+                empty_down_l = False
+                if is_check:
                     return True
-                else:
-                    empty_down_l = False
 
-            if empty_up_r and 0 <= target.i + k <= 7 and 0 <= target.j + k <= 7 and pos[target.i + k][target.j + k] is not None:
-                if (isinstance(pos[target.i + k][target.j + k], Bishop) or isinstance(pos[target.i + k][target.j + k], Queen)) and pos[target.i + k][target.j + k].color != self.color:
+            sq = Square(target.i + k, target.j + k)
+            not_empty, is_check = self.__sq_contains_piece(sq, pos, diagonal_pieces)
+            if empty_up_r and not_empty:
+                empty_up_r = False
+                if is_check:
                     return True
-                else:
-                    empty_up_r = False
 
-            if empty_down_r and 0 <= target.i - k <= 7 and 0 <= target.j + k <= 7 and pos[target.i - k][target.j + k] is not None:
-                if (isinstance(pos[target.i - k][target.j + k], Bishop) or isinstance(pos[target.i - k][target.j + k], Queen)) and pos[target.i - k][target.j + k].color != self.color:
+            sq = Square(target.i - k, target.j + k)
+            not_empty, is_check = self.__sq_contains_piece(sq, pos, diagonal_pieces)
+            if empty_down_r and not_empty:
+                empty_down_r = False
+                if is_check:
                     return True
-                else:
-                    empty_down_r = False
 
-            if empty_up and 0 <= target.i + k <= 7 and pos[target.i + k][target.j] is not None:
-                if (isinstance(pos[target.i + k][target.j], Rook) or isinstance(pos[target.i + k][target.j], Queen)) and pos[target.i + k][target.j].color != self.color:
+            sq = Square(target.i + k, target.j)
+            not_empty, is_check = self.__sq_contains_piece(sq, pos, straight_pieces)
+            if empty_up and not_empty:
+                empty_up = False
+                if is_check:
                     return True
-                else:
-                    empty_up = False
 
-            if empty_down and 0 <= target.i - k <= 7 and pos[target.i - k][target.j] is not None:
-                if (isinstance(pos[target.i - k][target.j], Rook) or isinstance(pos[target.i - k][target.j], Queen)) and pos[target.i - k][target.j].color != self.color:
+            sq = Square(target.i - k, target.j)
+            not_empty, is_check = self.__sq_contains_piece(sq, pos, straight_pieces)
+            if empty_down and not_empty:
+                empty_down = False
+                if is_check:
                     return True
-                else:
-                    empty_down = False
 
-            if empty_right and 0 <= target.j + k <= 7 and pos[target.i][target.j + k] is not None:
-                if (isinstance(pos[target.i][target.j + k], Rook) or isinstance(pos[target.i][target.j + k], Queen)) and pos[target.i][target.j + k].color != self.color:
+            sq = Square(target.i, target.j + k)
+            not_empty, is_check = self.__sq_contains_piece(sq, pos, straight_pieces)
+            if empty_right and not_empty:
+                empty_right = False
+                if is_check:
                     return True
-                else:
-                    empty_right = False
 
-            if empty_left and 0 <= target.j - k <= 7 and pos[target.i][target.j - k] is not None:
-                if (isinstance(pos[target.i][target.j - k], Rook) or isinstance(pos[target.i][target.j - k], Queen)) and pos[target.i][target.j - k].color != self.color:
+            sq = Square(target.i, target.j - k)
+            not_empty, is_check = self.__sq_contains_piece(sq, pos, straight_pieces)
+            if empty_left and not_empty:
+                empty_left = False
+                if is_check:
                     return True
-                else:
-                    empty_left = False
 
-            if not empty_up and not empty_down and not empty_left and not empty_right:
+            not_empty_straight = not empty_up and not empty_down and not empty_left and not empty_right
+            not_empty_diagonal = not empty_down_l and not empty_down_r and not empty_up_l and not empty_up_r
+            if not_empty_diagonal and not_empty_straight:
                 break
 
-        if target.i >= 2 and target.j >= 1 and isinstance(pos[target.i - 2][target.j - 1], Knight) and pos[target.i - 2][target.j - 1].color != self.color:
+        sq = Square(target.i - 2, target.j - 1)
+        if self.__sq_contains_piece(sq, pos, [Knight])[1]:
             return True
-        elif target.i >= 2 and target.j <= 6 and isinstance(pos[target.i - 2][target.j + 1], Knight) and pos[target.i - 2][target.j + 1].color != self.color:
+        sq = Square(target.i - 2, target.j + 1)
+        if self.__sq_contains_piece(sq, pos, [Knight])[1]:
             return True
-        elif target.i >= 1 and target.j <= 5 and isinstance(pos[target.i - 1][target.j + 2], Knight) and pos[target.i - 1][target.j + 2].color != self.color:
+        sq = Square(target.i - 1, target.j - 2)
+        if self.__sq_contains_piece(sq, pos, [Knight])[1]:
             return True
-        elif target.i <= 6 and target.j <= 5 and isinstance(pos[target.i + 1][target.j + 2], Knight) and pos[target.i + 1][target.j + 2].color != self.color:
+        sq = Square(target.i - 1, target.j + 2)
+        if self.__sq_contains_piece(sq, pos, [Knight])[1]:
             return True
-        elif target.i <= 5 and target.j <= 6 and isinstance(pos[target.i + 2][target.j + 1], Knight) and pos[target.i + 2][target.j + 1].color != self.color:
+        sq = Square(target.i + 1, target.j - 2)
+        if self.__sq_contains_piece(sq, pos, [Knight])[1]:
             return True
-        elif target.i <= 5 and target.j >= 1 and isinstance(pos[target.i + 2][target.j - 1], Knight) and pos[target.i + 2][target.j - 1].color != self.color:
+        sq = Square(target.i + 1, target.j + 2)
+        if self.__sq_contains_piece(sq, pos, [Knight])[1]:
             return True
-        elif target.i <= 6 and target.j >= 2 and isinstance(pos[target.i + 1][target.j - 2], Knight) and pos[target.i + 1][target.j - 2].color != self.color:
+        sq = Square(target.i + 2, target.j - 1)
+        if self.__sq_contains_piece(sq, pos, [Knight])[1]:
             return True
-        elif target.i >= 1 and target.j >= 2 and isinstance(pos[target.i - 1][target.j - 2], Knight) and pos[target.i - 1][target.j - 2].color != self.color:
+        sq = Square(target.i + 2, target.j + 1)
+        if self.__sq_contains_piece(sq, pos, [Knight])[1]:
             return True
 
         if target.j > 0 and target.i < 7 and isinstance(pos[target.i + 1][target.j - 1], Pond) and pos[target.i + 1][target.j - 1].color != self.color:
@@ -149,6 +184,7 @@ class Queen(Piece):
 
     def moved_throught_piece(self, source: Square, target: Square, pos: list):
         left_sq, right_sq = min(source.j, target.j), max(source.j, target.j)
+        upper_sq, lower_sq = min(source.i, target.i), max(source.i, target.i)
 
         if target.j == source.j and target.i == source.i:
             return False
@@ -159,7 +195,7 @@ class Queen(Piece):
                     return True
 
         elif target.j == source.j:
-            for i in range(left_sq + 1, right_sq):
+            for i in range(upper_sq + 1, lower_sq):
                 if pos[i][source.j] is not None:
                     return True
 

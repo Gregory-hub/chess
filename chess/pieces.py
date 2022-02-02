@@ -156,17 +156,26 @@ class King(Piece):
         if self.__sq_contains_piece(sq, pos, [Knight])[1]:
             return True
 
-        if target.j > 0 and target.i < 7 and isinstance(pos[target.i + 1][target.j - 1], Pond) and pos[target.i + 1][target.j - 1].color != self.color:
+        if target.j > 0 and target.i < 7 and self.color == 'b' and self.evil_pond(pos[target.i + 1][target.j - 1]):
             return True
-        elif target.j < 7 and target.i < 7 and isinstance(pos[target.i + 1][target.j + 1], Pond) and pos[target.i + 1][target.j + 1].color != self.color:
+        if target.j < 7 and target.i < 7 and self.color == 'b' and self.evil_pond(pos[target.i + 1][target.j + 1]):
+            return True
+        if target.j > 0 and target.i > 0 and self.color == 'w' and self.evil_pond(pos[target.i - 1][target.j - 1]):
+            return True
+        if target.j < 7 and target.i > 0 and self.color == 'w' and self.evil_pond(pos[target.i - 1][target.j + 1]):
             return True
 
-        if target.j > 0 and target.i > 0 and isinstance(pos[target.i - 1][target.j - 1], Pond) and pos[target.i - 1][target.j - 1].color != self.color:
-            return True
-        elif target.j < 7 and target.i > 0 and isinstance(pos[target.i - 1][target.j + 1], Pond) and pos[target.i - 1][target.j + 1].color != self.color:
-            return True
+        for i in range(-1, 2):
+            for j in range(-1, 2):
+                if i == j == 0 or not 0 <= target.i + i <= 7 or not 0 <= target.j + j <= 7:
+                    continue
+                if isinstance(pos[target.i + i][target.j + j], King) and pos[target.i + i][target.j + j].color != self.color:
+                    return True
 
         return False
+
+    def evil_pond(self, piece: Piece):
+        return isinstance(piece, Pond) and piece.color != self.color
 
 
 class Queen(Piece):

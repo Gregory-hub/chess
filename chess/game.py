@@ -112,7 +112,7 @@ def move_is_legal(game: Game, old_pos: list, new_pos: list):
     kings = find_kings(new_pos)
     check = False
     for king in kings:
-        if king[0].in_check(king[1], new_pos):
+        if king[0].check(king[1], new_pos):
             check = True
         if king[0].color == piece.color:
             current_players_king = king
@@ -141,7 +141,7 @@ def move_is_legal(game: Game, old_pos: list, new_pos: list):
     if takes_king(target, old_pos, new_pos):
         print("Takes king")
         return False
-    if check and current_players_king[0].in_check(current_players_king[1], new_pos):
+    if current_players_king[0].check(current_players_king[1], new_pos):
         print("Cannot move this because it's check")
         return False
     if isinstance(piece, Pond) and not pond_takes_in_valid_way(source, target, old_pos):

@@ -6,14 +6,12 @@
     e. piece didn't move through another one(except knights) +
     f. piece stands on another one's square(both colors) +
     g. position after move is not check for active player +
-2. move delivers checkmate
-3. move delivers check +
+2. move delivers check +
+3. move delivers checkmate
 4. castling
     a. castling is legal
 5. en passand
 6. promoting
-
-!takes with pond
 
            black
       0 1 2 3 4 5 6 7

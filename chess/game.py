@@ -17,6 +17,7 @@ def create_game(length: int, supplement: int, opponent_username: str, current_pl
         start_time=datetime.now(timezone.utc),
         game_length=timedelta(seconds=length),
         supplement=timedelta(seconds=supplement),
+        # fen='3qk3/8/8/8/8/8/8/3QK3 w KQkq - 0 1'
     )
     if current_player_color == 'random':
         current_player_color = choice(['black', 'white'])
@@ -60,7 +61,8 @@ def create_players(opponent_username: str, current_player_color: str):
 
 def get_my_games():
     user = current_user
-    return [player.game for player in user.players if player.game is not None]
+    games = [player.game for player in user.players if player.game is not None]
+    return games[::-1]
 
 
 # move processing
@@ -111,10 +113,16 @@ def move_is_legal(game: Game, old_pos: list, new_pos: list):
     piece, source, target = get_move_info(old_pos, new_pos)
     kings = find_kings(new_pos)
     check = False
+    checkmate = False
+    stalemate = False
     for king in kings:
-        if king[0].check(king[1], new_pos):
+        if king.check(king.square, new_pos):
             check = True
-        if king[0].color == piece.color:
+        if king.checkmate(king.square, new_pos):
+            checkmate = True
+        if king.stalemate(king.square, new_pos):
+            stalemate = True
+        if king.color == piece.color:
             current_players_king = king
 
     if source and target and piece:
@@ -124,6 +132,8 @@ def move_is_legal(game: Game, old_pos: list, new_pos: list):
         print('Target:', target.name)
         print('Move color:', piece.color)
         print('Check:', check)
+        print('Stalemate: ', stalemate)
+        print('Checkmate:', checkmate)
         print()
 
     if game.get_active_color() != piece.color:
@@ -141,7 +151,7 @@ def move_is_legal(game: Game, old_pos: list, new_pos: list):
     if takes_king(target, old_pos, new_pos):
         print("Takes king")
         return False
-    if current_players_king[0].check(current_players_king[1], new_pos):
+    if current_players_king.check(current_players_king.square, new_pos):
         print("Cannot move this because it's check")
         return False
     if isinstance(piece, Pond) and not pond_takes_in_valid_way(source, target, old_pos):
@@ -157,11 +167,17 @@ def move_is_legal(game: Game, old_pos: list, new_pos: list):
 def get_pos(fen_pos: str):
     pos_matrix = [[] for i in range(8)]
     for i in range(8):
-        for sq in fen_pos.split('/')[i]:
+        row = fen_pos.split('/')[i]
+        j = 0
+        for sq in row:
             if sq.isdigit():
                 pos_matrix[i].extend([None for j in range(int(sq))])
+                j += int(sq)
             else:
-                pos_matrix[i].append(letter_to_piece(sq))
+                piece = letter_to_piece(sq)
+                piece.square = Square(i, j)
+                pos_matrix[i].append(piece)
+                j += 1
     return pos_matrix
 
 
@@ -202,7 +218,7 @@ def find_kings(pos: list):
     for i in range(8):
         for j in range(8):
             if isinstance(pos[i][j], King):
-                kings.append([pos[i][j], Square(i, j)])
+                kings.append(pos[i][j])
     return kings
 
 

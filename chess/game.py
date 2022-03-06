@@ -17,7 +17,7 @@ def create_game(length: int, supplement: int, opponent_username: str, current_pl
         start_time=datetime.now(timezone.utc),
         game_length=timedelta(seconds=length),
         supplement=timedelta(seconds=supplement),
-        # fen='3qk3/8/8/8/8/8/8/3QK3 w KQkq - 0 1'
+        fen='r2qk2r/8/8/8/8/8/8/3QK3 w KQkq - 0 1'
     )
     if current_player_color == 'random':
         current_player_color = choice(['black', 'white'])

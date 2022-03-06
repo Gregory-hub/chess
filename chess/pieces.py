@@ -20,7 +20,7 @@ class Piece(ABC):
         pass
 
     def available_squares(self, pos: list):
-        pass
+        return generate_available_squares(pos, self)
 
     def __eq__(self, other):
         if self is None and other is None:
@@ -49,23 +49,11 @@ class King(Piece):
     def moved_throught_piece(self, source: Square, target: Square, pos: list):
         return False
 
-    def available_squares(self, pos: list):
-        squares = []
-        for i in range(-1, 2):
-            for j in range(-1, 2):
-                if i == 0 and j == 0 or not 0 <= self.square.i + i <= 7 or not 0 <= self.square.j + j <= 7:
-                    continue
-                if not pos[self.square.i + i][self.square.j + j] and not self.check(Square(self.square.i + i, self.square.j + j), pos):
-                    squares.append(pos[self.square.i + i][self.square.j + j])
-        return squares
-
     def check(self, target: Square, pos: list):
         for i in range(-1, 2):
             for j in range(-1, 2):
                 if i == j == 0 or not 0 <= target.i + i <= 7 or not 0 <= target.j + j <= 7:
                     continue
-                if isinstance(pos[target.i + i][target.j + j], King) and pos[target.i + i][target.j + j].color != self.color:
-                    return True
 
         potential_evil_pieces = self.__pieces_attacking_sq(target, pos)
         for piece in potential_evil_pieces:
@@ -76,15 +64,22 @@ class King(Piece):
 
     def checkmate(self, target: Square, pos: list):
         if not self.check(target, pos):
+            print("Not check")
             return False
         if not self.__king_cannot_move(target, pos):
+            print("King can move")
             return False
 
         evil_pieces = self.__pieces_attacking_sq(target, pos)
         if len(evil_pieces) == 1:
+            print("Check by one peice")
             evil_piece = evil_pieces[0]
             if self.__piece_can_be_taken(evil_piece, pos) or self.__check_can_be_blocked(target, evil_piece, pos):
+                print("Piece can be taken or check can be blocked")
+                print("Piece can be taken:", self.__piece_can_be_taken(evil_piece, pos))
+                print("Check can be blocked:", self.__check_can_be_blocked(target, evil_piece, pos))
                 return False
+        print()
         return True
 
     def stalemate(self, target: Square, pos: list):
@@ -124,9 +119,13 @@ class King(Piece):
     def __king_cannot_move(self, target: Square, pos: list):
         for i in range(-1, 2):
             for j in range(-1, 2):
-                if not 0 <= target.i + i <= 7 or not 0 <= target.j + j <= 7:
+                if i == j == 0 or not 0 <= target.i + i <= 7 or not 0 <= target.j + j <= 7:
                     continue
+                # temp_pos = pos
+                # temp_pos[target.i + i][target.j + j] = temp_pos[target.i][target.j]
+                # temp_pos[target.i][target.j] = None
                 if not pos[target.i + i][target.j + j] and not self.check(Square(target.i + i, target.j + j), pos):
+                    print(Square(target.i + i, target.j + j).name)
                     return False
         return True
 
@@ -189,145 +188,12 @@ class King(Piece):
         return not_empty, is_evil_piece
 
     def __pieces_attacking_sq(self, target: Square, pos: list):
-        empty_up_l = True
-        empty_down_l = True
-        empty_up_r = True
-        empty_down_r = True
-        empty_up = True
-        empty_down = True
-        empty_left = True
-        empty_right = True
-
-        pieces = []
-
-        diagonal_pieces = [Bishop, Queen]
-        straight_pieces = [Rook, Queen]
-
-        for k in range(1, 8):
-            sq = Square(target.i + k, target.j - k)
-            if not sq.valid_coords():
-                empty_up_l = False
-            else:
-                not_empty, is_evil_piece = self.__sq_contains_piece(sq, pos, diagonal_pieces)
-                if empty_up_l and not_empty:
-                    empty_up_l = False
-                    if is_evil_piece:
-                        pieces.append(pos[sq.i][sq.j])
-
-            sq = Square(target.i - k, target.j - k)
-            if not sq.valid_coords():
-                empty_down_l = False
-            else:
-                not_empty, is_evil_piece = self.__sq_contains_piece(sq, pos, diagonal_pieces)
-                if empty_down_l and not_empty:
-                    empty_down_l = False
-                    if is_evil_piece:
-                        pieces.append(pos[sq.i][sq.j])
-
-            sq = Square(target.i + k, target.j + k)
-            if not sq.valid_coords():
-                empty_up_r = False
-            else:
-                not_empty, is_evil_piece = self.__sq_contains_piece(sq, pos, diagonal_pieces)
-                if empty_up_r and not_empty:
-                    empty_up_r = False
-                    if is_evil_piece:
-                        pieces.append(pos[sq.i][sq.j])
-
-            sq = Square(target.i - k, target.j + k)
-            if not sq.valid_coords():
-                empty_down_r = False
-            else:
-                not_empty, is_evil_piece = self.__sq_contains_piece(sq, pos, diagonal_pieces)
-                if empty_down_r and not_empty:
-                    empty_down_r = False
-                    if is_evil_piece:
-                        pieces.append(pos[sq.i][sq.j])
-
-            sq = Square(target.i + k, target.j)
-            if not sq.valid_coords():
-                empty_up = False
-            else:
-                not_empty, is_evil_piece = self.__sq_contains_piece(sq, pos, straight_pieces)
-                if empty_up and not_empty:
-                    empty_up = False
-                    if is_evil_piece:
-                        pieces.append(pos[sq.i][sq.j])
-
-            sq = Square(target.i - k, target.j)
-            if not sq.valid_coords():
-                empty_down = False
-            else:
-                not_empty, is_evil_piece = self.__sq_contains_piece(sq, pos, straight_pieces)
-                if empty_down and not_empty:
-                    empty_down = False
-                    if is_evil_piece:
-                        pieces.append(pos[sq.i][sq.j])
-
-            sq = Square(target.i, target.j + k)
-            if not sq.valid_coords():
-                empty_right = False
-            else:
-                not_empty, is_evil_piece = self.__sq_contains_piece(sq, pos, straight_pieces)
-                if empty_right and not_empty:
-                    empty_right = False
-                    if is_evil_piece:
-                        pieces.append(pos[sq.i][sq.j])
-
-            sq = Square(target.i, target.j - k)
-            if not sq.valid_coords():
-                empty_left = False
-            else:
-                not_empty, is_evil_piece = self.__sq_contains_piece(sq, pos, straight_pieces)
-                if empty_left and not_empty:
-                    empty_left = False
-                    if is_evil_piece:
-                        pieces.append(pos[sq.i][sq.j])
-
-            not_empty_straight = not empty_up and not empty_down and not empty_left and not empty_right
-            not_empty_diagonal = not empty_down_l and not empty_down_r and not empty_up_l and not empty_up_r
-            if not_empty_diagonal and not_empty_straight:
-                break
-
-        sq = Square(target.i - 2, target.j - 1)
-        if self.__sq_contains_piece(sq, pos, [Knight])[1]:
-            pieces.append(pos[sq.i][sq.j])
-        sq = Square(target.i - 2, target.j + 1)
-        if self.__sq_contains_piece(sq, pos, [Knight])[1]:
-            pieces.append(pos[sq.i][sq.j])
-        sq = Square(target.i - 1, target.j - 2)
-        if self.__sq_contains_piece(sq, pos, [Knight])[1]:
-            pieces.append(pos[sq.i][sq.j])
-        sq = Square(target.i - 1, target.j + 2)
-        if self.__sq_contains_piece(sq, pos, [Knight])[1]:
-            pieces.append(pos[sq.i][sq.j])
-        sq = Square(target.i + 1, target.j - 2)
-        if self.__sq_contains_piece(sq, pos, [Knight])[1]:
-            pieces.append(pos[sq.i][sq.j])
-        sq = Square(target.i + 1, target.j + 2)
-        if self.__sq_contains_piece(sq, pos, [Knight])[1]:
-            pieces.append(pos[sq.i][sq.j])
-        sq = Square(target.i + 2, target.j - 1)
-        if self.__sq_contains_piece(sq, pos, [Knight])[1]:
-            pieces.append(pos[sq.i][sq.j])
-        sq = Square(target.i + 2, target.j + 1)
-        if self.__sq_contains_piece(sq, pos, [Knight])[1]:
-            pieces.append(pos[sq.i][sq.j])
-
-        sq = Square(target.i + 1, target.j - 1)
-        if target.j > 0 and target.i < 7 and self.color == 'b' and isinstance(pos[sq.i][sq.j], Pond):
-            pieces.append(pos[sq.i][sq.j])
-        sq = Square(target.i + 1, target.j + 1)
-        if target.j < 7 and target.i < 7 and self.color == 'b' and isinstance(pos[sq.i][sq.j], Pond):
-            pieces.append(pos[sq.i][sq.j])
-        sq = Square(target.i - 1, target.j - 1)
-        if target.j > 0 and target.i > 0 and self.color == 'w' and isinstance(pos[sq.i][sq.j], Pond):
-            pieces.append(pos[sq.i][sq.j])
-        sq = Square(target.i - 1, target.j + 1)
-        if target.j < 7 and target.i > 0 and self.color == 'w' and isinstance(pos[sq.i][sq.j], Pond):
-            pieces.append(pos[sq.i][sq.j])
-
-        return pieces
+        pieces = self.__get_all_pieces(pos)
+        evil_pieces = []
+        for piece in pieces:
+            if target in piece.available_squares(pos):
+                evil_pieces.append(piece)
+        return evil_pieces
 
 
 class Queen(Piece):
@@ -374,123 +240,6 @@ class Queen(Piece):
 
         return False
 
-    def available_squares(self, pos: list):
-        squares = []
-        empty_up = empty_down = empty_left = empty_right = True
-        empty_up_l = empty_down_l = empty_up_r = empty_down_r = True
-
-        for k in range(1, 8):
-            if empty_up:
-                sq = Square(self.square.i + k, self.square.j)
-                if not sq.valid_coords():
-                    empty_up = False
-                else:
-                    not_empty = True if pos[sq.i][sq.j] else False
-                    if not_empty:
-                        empty_up = False
-                        if pos[sq.i][sq.j].color != self.color:
-                            squares.append(sq)
-                    else:
-                        squares.append(sq)
-
-            if empty_down:
-                sq = Square(self.square.i - k, self.square.j)
-                if not sq.valid_coords():
-                    empty_down = False
-                else:
-                    not_empty = True if pos[sq.i][sq.j] else False
-                    if not_empty:
-                        empty_down = False
-                        if pos[sq.i][sq.j].color != self.color:
-                            squares.append(sq)
-                    else:
-                        squares.append(sq)
-
-            if empty_right:
-                sq = Square(self.square.i, self.square.j + k)
-                if not sq.valid_coords():
-                    empty_right = False
-                else:
-                    not_empty = True if pos[sq.i][sq.j] else False
-                    if not_empty:
-                        empty_right = False
-                        if pos[sq.i][sq.j].color != self.color:
-                            squares.append(sq)
-                    else:
-                        squares.append(sq)
-
-            if empty_left:
-                sq = Square(self.square.i, self.square.j - k)
-                if not sq.valid_coords():
-                    empty_left = False
-                else:
-                    not_empty = True if pos[sq.i][sq.j] else False
-                    if not_empty:
-                        empty_left = False
-                        if pos[sq.i][sq.j].color != self.color:
-                            squares.append(sq)
-                    else:
-                        squares.append(sq)
-
-            if empty_up_l:
-                sq = Square(self.square.i + k, self.square.j - k)
-                if not sq.valid_coords():
-                    empty_up_l = False
-                else:
-                    not_empty = True if pos[sq.i][sq.j] else False
-                    if not_empty:
-                        empty_up_l = False
-                        if pos[sq.i][sq.j].color != self.color:
-                            squares.append(sq)
-                    else:
-                        squares.append(sq)
-
-            if empty_up_r:
-                sq = Square(self.square.i + k, self.square.j + k)
-                if not sq.valid_coords():
-                    empty_up_r = False
-                else:
-                    not_empty = True if pos[sq.i][sq.j] else False
-                    if not_empty:
-                        empty_up_r = False
-                        if pos[sq.i][sq.j].color != self.color:
-                            squares.append(sq)
-                    else:
-                        squares.append(sq)
-
-            if empty_down_l:
-                sq = Square(self.square.i - k, self.square.j - k)
-                if not sq.valid_coords():
-                    empty_down_l = False
-                else:
-                    not_empty = True if pos[sq.i][sq.j] else False
-                    if not_empty:
-                        empty_down_l = False
-                        if pos[sq.i][sq.j].color != self.color:
-                            squares.append(sq)
-                    else:
-                        squares.append(sq)
-
-            if empty_down_r:
-                sq = Square(self.square.i - k, self.square.j + k)
-                if not sq.valid_coords():
-                    empty_down_r = False
-                else:
-                    not_empty = True if pos[sq.i][sq.j] else False
-                    if not_empty:
-                        empty_down_r = False
-                        if pos[sq.i][sq.j].color != self.color:
-                            squares.append(sq)
-                    else:
-                        squares.append(sq)
-
-            not_empty_straight = not empty_up and not empty_down and not empty_left and not empty_right
-            not_empty_diagonal = not empty_down_l and not empty_down_r and not empty_up_l and not empty_up_r
-            if not_empty_diagonal and not_empty_straight:
-                break
-
-        return squares
-
 
 class Rook(Piece):
     letter = 'r'
@@ -513,68 +262,6 @@ class Rook(Piece):
                 return True
 
         return False
-
-    def available_squares(self, pos: list):
-        squares = []
-        empty_up = empty_down = empty_left = empty_right = True
-
-        for k in range(1, 8):
-            if empty_up:
-                sq = Square(self.square.i + k, self.square.j)
-                if not sq.valid_coords():
-                    empty_up = False
-                else:
-                    not_empty = True if pos[sq.i][sq.j] else False
-                    if not_empty:
-                        empty_up = False
-                        if pos[sq.i][sq.j].color != self.color:
-                            squares.append(sq)
-                    else:
-                        squares.append(sq)
-
-            if empty_down:
-                sq = Square(self.square.i - k, self.square.j)
-                if not sq.valid_coords():
-                    empty_down = False
-                else:
-                    not_empty = True if pos[sq.i][sq.j] else False
-                    if not_empty:
-                        empty_down = False
-                        if pos[sq.i][sq.j].color != self.color:
-                            squares.append(sq)
-                    else:
-                        squares.append(sq)
-
-            if empty_right:
-                sq = Square(self.square.i, self.square.j + k)
-                if not sq.valid_coords():
-                    empty_right = False
-                else:
-                    not_empty = True if pos[sq.i][sq.j] else False
-                    if not_empty:
-                        empty_right = False
-                        if pos[sq.i][sq.j].color != self.color:
-                            squares.append(sq)
-                    else:
-                        squares.append(sq)
-
-            if empty_left:
-                sq = Square(self.square.i, self.square.j - k)
-                if not sq.valid_coords():
-                    empty_left = False
-                else:
-                    not_empty = True if pos[sq.i][sq.j] else False
-                    if not_empty:
-                        empty_left = False
-                        if pos[sq.i][sq.j].color != self.color:
-                            squares.append(sq)
-                    else:
-                        squares.append(sq)
-
-            if empty_up and empty_down and empty_left and empty_right:
-                break
-
-        return squares
 
 
 class Bishop(Piece):
@@ -602,68 +289,6 @@ class Bishop(Piece):
                     return True
         return False
 
-    def available_squares(self, pos: list):
-        squares = []
-        empty_up_l = empty_down_l = empty_up_r = empty_down_r = True
-
-        for k in range(1, 8):
-            if empty_up_l:
-                sq = Square(self.square.i + k, self.square.j - k)
-                if not sq.valid_coords():
-                    empty_up_l = False
-                else:
-                    not_empty = True if pos[sq.i][sq.j] else False
-                    if not_empty:
-                        empty_up_l = False
-                        if pos[sq.i][sq.j].color != self.color:
-                            squares.append(sq)
-                    else:
-                        squares.append(sq)
-
-            if empty_up_r:
-                sq = Square(self.square.i + k, self.square.j + k)
-                if not sq.valid_coords():
-                    empty_up_r = False
-                else:
-                    not_empty = True if pos[sq.i][sq.j] else False
-                    if not_empty:
-                        empty_up_r = False
-                        if pos[sq.i][sq.j].color != self.color:
-                            squares.append(sq)
-                    else:
-                        squares.append(sq)
-
-            if empty_down_l:
-                sq = Square(self.square.i - k, self.square.j - k)
-                if not sq.valid_coords():
-                    empty_down_l = False
-                else:
-                    not_empty = True if pos[sq.i][sq.j] else False
-                    if not_empty:
-                        empty_down_l = False
-                        if pos[sq.i][sq.j].color != self.color:
-                            squares.append(sq)
-                    else:
-                        squares.append(sq)
-
-            if empty_down_r:
-                sq = Square(self.square.i - k, self.square.j + k)
-                if not sq.valid_coords():
-                    empty_down_r = False
-                else:
-                    not_empty = True if pos[sq.i][sq.j] else False
-                    if not_empty:
-                        empty_down_r = False
-                        if pos[sq.i][sq.j].color != self.color:
-                            squares.append(sq)
-                    else:
-                        squares.append(sq)
-
-            if empty_up_l and empty_down_l and empty_up_r and empty_down_r:
-                break
-
-        return squares
-
 
 class Knight(Piece):
     letter = 'n'
@@ -681,36 +306,6 @@ class Knight(Piece):
     def moved_throught_piece(self, source: Square, target: Square, pos: list):
         return False
 
-    def available_squares(self, pos: list):
-        squares = []
-
-        sq = Square(self.square.i - 2, self.square.j - 1)
-        if sq is not None and (not pos[sq.i][sq.j] or pos[sq.i][sq.j].color != self.color):
-            squares.append(pos[sq.i][sq.j])
-        sq = Square(self.square.i - 2, self.square.j + 1)
-        if sq is not None and (not pos[sq.i][sq.j] or pos[sq.i][sq.j].color != self.color):
-            squares.append(pos[sq.i][sq.j])
-        sq = Square(self.square.i - 1, self.square.j - 2)
-        if sq is not None and (not pos[sq.i][sq.j] or pos[sq.i][sq.j].color != self.color):
-            squares.append(pos[sq.i][sq.j])
-        sq = Square(self.square.i - 1, self.square.j + 2)
-        if sq is not None and (not pos[sq.i][sq.j] or pos[sq.i][sq.j].color != self.color):
-            squares.append(pos[sq.i][sq.j])
-        sq = Square(self.square.i + 1, self.square.j - 2)
-        if sq is not None and (not pos[sq.i][sq.j] or pos[sq.i][sq.j].color != self.color):
-            squares.append(pos[sq.i][sq.j])
-        sq = Square(self.square.i + 1, self.square.j + 2)
-        if sq is not None and (not pos[sq.i][sq.j] or pos[sq.i][sq.j].color != self.color):
-            squares.append(pos[sq.i][sq.j])
-        sq = Square(self.square.i + 2, self.square.j - 1)
-        if sq is not None and (not pos[sq.i][sq.j] or pos[sq.i][sq.j].color != self.color):
-            squares.append(pos[sq.i][sq.j])
-        sq = Square(self.square.i + 2, self.square.j + 1)
-        if sq is not None and (not pos[sq.i][sq.j] or pos[sq.i][sq.j].color != self.color):
-            squares.append(pos[sq.i][sq.j])
-
-        return squares
-
 
 class Pond(Piece):
     letter = 'p'
@@ -720,34 +315,26 @@ class Pond(Piece):
             return False
 
         if self.color == 'w':
-
             if source.i == 7 or target.i == 7:
                 return False
-
             elif source.i == 6 and target.i == 4:
                 if target.j != source.j:
                     return False
-
             elif source.i - target.i != 1:
                 return False
-
             elif abs(target.j - source.j) > 1:
                 return False
 
             return True
 
         elif self.color == 'b':
-
             if source.i == 0 or target.i == 0:
                 return False
-
             elif source.i == 1 and target.i == 3:
                 if target.j != source.j:
                     return False
-
             elif target.i - source.i != 1:
                 return False
-
             elif abs(target.j - source.j) > 1:
                 return False
 
@@ -758,24 +345,6 @@ class Pond(Piece):
             return True
 
         return False
-
-    def available_squares(self, pos: list):
-        squares = []
-
-        sq = Square(self.square.i + 1, self.square.j - 1)
-        if self.square.j > 0 and self.square.i < 7 and self.color == 'b' and isinstance(pos[sq.i][sq.j], Pond):
-            squares.append(pos[sq.i][sq.j])
-        sq = Square(self.square.i + 1, self.square.j + 1)
-        if self.square.j < 7 and self.square.i < 7 and self.color == 'b' and isinstance(pos[sq.i][sq.j], Pond):
-            squares.append(pos[sq.i][sq.j])
-        sq = Square(self.square.i - 1, self.square.j - 1)
-        if self.square.j > 0 and self.square.i > 0 and self.color == 'w' and isinstance(pos[sq.i][sq.j], Pond):
-            squares.append(pos[sq.i][sq.j])
-        sq = Square(self.square.i - 1, self.square.j + 1)
-        if self.square.j < 7 and self.square.i > 0 and self.color == 'w' and isinstance(pos[sq.i][sq.j], Pond):
-            squares.append(pos[sq.i][sq.j])
-
-        return squares
 
 
 def letter_to_piece(letter: str):
@@ -798,3 +367,213 @@ def letter_to_piece(letter: str):
         return Pond(color=color)
     else:
         return None
+
+
+def generate_available_squares(pos: list, piece: Piece):
+    squares = []
+
+    if isinstance(piece, Rook) or isinstance(piece, Queen):
+        squares.extend(rook_squares(pos, piece))
+    if isinstance(piece, Bishop) or isinstance(piece, Queen):
+        squares.extend(bishop_squares(pos, piece))
+    if isinstance(piece, Knight):
+        squares.extend(knight_squares(pos, piece))
+    if isinstance(piece, Pond):
+        squares.extend(pond_squares(pos, piece))
+    if isinstance(piece, King):
+        squares.extend(king_squares(pos, piece))
+
+    return squares
+
+
+def rook_squares(pos: list, piece: [Rook, Queen]):
+    squares = []
+    empty_up = empty_down = empty_left = empty_right = True
+    for k in range(1, 8):
+        if empty_up:
+            sq = Square(piece.square.i + k, piece.square.j)
+            if not sq.valid_coords():
+                empty_up = False
+            else:
+                not_empty = True if pos[sq.i][sq.j] else False
+                if not_empty:
+                    empty_up = False
+                    if pos[sq.i][sq.j].color != piece.color:
+                        squares.append(sq)
+                else:
+                    squares.append(sq)
+
+        if empty_down:
+            sq = Square(piece.square.i - k, piece.square.j)
+            if not sq.valid_coords():
+                empty_down = False
+            else:
+                not_empty = True if pos[sq.i][sq.j] else False
+                if not_empty:
+                    empty_down = False
+                    if pos[sq.i][sq.j].color != piece.color:
+                        squares.append(sq)
+                else:
+                    squares.append(sq)
+
+        if empty_right:
+            sq = Square(piece.square.i, piece.square.j + k)
+            if not sq.valid_coords():
+                empty_right = False
+            else:
+                not_empty = True if pos[sq.i][sq.j] else False
+                if not_empty:
+                    empty_right = False
+                    if pos[sq.i][sq.j].color != piece.color:
+                        squares.append(sq)
+                else:
+                    squares.append(sq)
+
+        if empty_left:
+            sq = Square(piece.square.i, piece.square.j - k)
+            if not sq.valid_coords():
+                empty_left = False
+            else:
+                not_empty = True if pos[sq.i][sq.j] else False
+                if not_empty:
+                    empty_left = False
+                    if pos[sq.i][sq.j].color != piece.color:
+                        squares.append(sq)
+                else:
+                    squares.append(sq)
+
+        not_empty_straight = not empty_up and not empty_down and not empty_left and not empty_right
+        if not_empty_straight:
+            break
+
+    return squares
+
+
+def bishop_squares(pos: list, piece: [Bishop, Queen]):
+    squares = []
+    empty_up_l = empty_down_l = empty_up_r = empty_down_r = True
+
+    for k in range(1, 8):
+        if empty_up_l:
+            sq = Square(piece.square.i + k, piece.square.j - k)
+            if not sq.valid_coords():
+                empty_up_l = False
+            else:
+                not_empty = True if pos[sq.i][sq.j] else False
+                if not_empty:
+                    empty_up_l = False
+                    if pos[sq.i][sq.j].color != piece.color:
+                        squares.append(sq)
+                else:
+                    squares.append(sq)
+
+        if empty_up_r:
+            sq = Square(piece.square.i + k, piece.square.j + k)
+            if not sq.valid_coords():
+                empty_up_r = False
+            else:
+                not_empty = True if pos[sq.i][sq.j] else False
+                if not_empty:
+                    empty_up_r = False
+                    if pos[sq.i][sq.j].color != piece.color:
+                        squares.append(sq)
+                else:
+                    squares.append(sq)
+
+        if empty_down_l:
+            sq = Square(piece.square.i - k, piece.square.j - k)
+            if not sq.valid_coords():
+                empty_down_l = False
+            else:
+                not_empty = True if pos[sq.i][sq.j] else False
+                if not_empty:
+                    empty_down_l = False
+                    if pos[sq.i][sq.j].color != piece.color:
+                        squares.append(sq)
+                else:
+                    squares.append(sq)
+
+        if empty_down_r:
+            sq = Square(piece.square.i - k, piece.square.j + k)
+            if not sq.valid_coords():
+                empty_down_r = False
+            else:
+                not_empty = True if pos[sq.i][sq.j] else False
+                if not_empty:
+                    empty_down_r = False
+                    if pos[sq.i][sq.j].color != piece.color:
+                        squares.append(sq)
+                else:
+                    squares.append(sq)
+
+        not_empty_diagonal = not empty_down_l and not empty_down_r and not empty_up_l and not empty_up_r
+        if not_empty_diagonal:
+            break
+
+    return squares
+
+
+def knight_squares(pos: list, piece: Knight):
+    squares = []
+
+    sq = Square(piece.square.i - 2, piece.square.j - 1)
+    if sq is not None and (not pos[sq.i][sq.j] or pos[sq.i][sq.j].color != piece.color):
+        squares.append(sq)
+    sq = Square(piece.square.i - 2, piece.square.j + 1)
+    if sq is not None and (not pos[sq.i][sq.j] or pos[sq.i][sq.j].color != piece.color):
+        squares.append(sq)
+    sq = Square(piece.square.i - 1, piece.square.j - 2)
+    if sq is not None and (not pos[sq.i][sq.j] or pos[sq.i][sq.j].color != piece.color):
+        squares.append(sq)
+    sq = Square(piece.square.i - 1, piece.square.j + 2)
+    if sq is not None and (not pos[sq.i][sq.j] or pos[sq.i][sq.j].color != piece.color):
+        squares.append(sq)
+    sq = Square(piece.square.i + 1, piece.square.j - 2)
+    if sq is not None and (not pos[sq.i][sq.j] or pos[sq.i][sq.j].color != piece.color):
+        squares.append(sq)
+    sq = Square(piece.square.i + 1, piece.square.j + 2)
+    if sq is not None and (not pos[sq.i][sq.j] or pos[sq.i][sq.j].color != piece.color):
+        squares.append(sq)
+    sq = Square(piece.square.i + 2, piece.square.j - 1)
+    if sq is not None and (not pos[sq.i][sq.j] or pos[sq.i][sq.j].color != piece.color):
+        squares.append(sq)
+    sq = Square(piece.square.i + 2, piece.square.j + 1)
+    if sq is not None and (not pos[sq.i][sq.j] or pos[sq.i][sq.j].color != piece.color):
+        squares.append(sq)
+
+    return squares
+
+
+def pond_squares(pos: list, piece: Pond):
+    squares = []
+
+    sq = Square(piece.square.i + 1, piece.square.j - 1)
+    if piece.square.j > 0 and piece.square.i < 7 and piece.color == 'b' and isinstance(pos[sq.i][sq.j], Pond):
+        squares.append(sq)
+    sq = Square(piece.square.i + 1, piece.square.j + 1)
+    if piece.square.j < 7 and piece.square.i < 7 and piece.color == 'b' and isinstance(pos[sq.i][sq.j], Pond):
+        squares.append(sq)
+    sq = Square(piece.square.i - 1, piece.square.j - 1)
+    if piece.square.j > 0 and piece.square.i > 0 and piece.color == 'w' and isinstance(pos[sq.i][sq.j], Pond):
+        squares.append(sq)
+    sq = Square(piece.square.i - 1, piece.square.j + 1)
+    if piece.square.j < 7 and piece.square.i > 0 and piece.color == 'w' and isinstance(pos[sq.i][sq.j], Pond):
+        squares.append(sq)
+
+    return squares
+
+
+def king_squares(pos: list, piece: King):
+    squares = []
+
+    for i in range(-1, 2):
+        for j in range(-1, 2):
+            sq = Square(piece.square.i + i, piece.square.j + j)
+            if i == 0 and j == 0 or not 0 <= sq.i <= 7 or not 0 <= sq.j <= 7:
+                continue
+            if pos[sq.i][sq.j] and pos[sq.i][sq.j].color == piece.color:
+                continue
+            if not pos[sq.i][sq.j]:
+                squares.append(sq)
+
+    return squares

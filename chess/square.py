@@ -14,6 +14,11 @@ class Square:
             return False
         return True
 
+    def __eq__(self, other):
+        if self.i == other.i and self.j == other.j:
+            return True
+        return False
+
 
 def squarename(i: int, j: int):
     if not 0 <= i <= 7 or not 0 <= j <= 7:

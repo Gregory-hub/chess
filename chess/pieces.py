@@ -56,6 +56,7 @@ class King(Piece):
                     continue
 
         potential_evil_pieces = self.__pieces_attacking_sq(target, pos)
+        print(self.color, potential_evil_pieces)
         for piece in potential_evil_pieces:
             if self.color != piece.color:
                 return True
@@ -76,8 +77,8 @@ class King(Piece):
             evil_piece = evil_pieces[0]
             if self.__piece_can_be_taken(evil_piece, pos) or self.__check_can_be_blocked(target, evil_piece, pos):
                 print("Piece can be taken or check can be blocked")
-                print("Piece can be taken:", self.__piece_can_be_taken(evil_piece, pos))
-                print("Check can be blocked:", self.__check_can_be_blocked(target, evil_piece, pos))
+                print(f"\tPiece can be taken: {self.__piece_can_be_taken(evil_piece, pos)}")
+                print(f"\tCheck can be blocked: {self.__check_can_be_blocked(target, evil_piece, pos)}({pos[target.i][target.j]})")
                 return False
         print()
         return True
@@ -90,7 +91,21 @@ class King(Piece):
     def __no_moves(self, target: Square, pos: list):
         pieces = self.__get_all_pieces(pos)
         pieces = self.__filter_pieces(pieces, color=self.color)
+        kings = [piece for piece in pieces if isinstance(piece, King)]
+        pieces = [piece for piece in pieces if not isinstance(piece, King)]
+
         available_moves = self.__get_all_available_squares(pieces, pos)
+        for king in kings:
+            for i in range(-1, 2):
+                for j in range(-1, 2):
+                    sq = Square(king.square.i + i, king.square.j + j)
+                    if i == 0 and j == 0 or not 0 <= sq.i <= 7 or not 0 <= sq.j <= 7:
+                        continue
+                    temp_pos = self.__generate_temp_pos(king.square, sq, pos)
+                    if (not pos[sq.i][sq.j] or pos[sq.i][sq.j].color != king.color) and not king.check(sq, temp_pos):
+                        available_moves.append(sq)
+
+        print("Available moves:", [sq.name for sq in available_moves])
         if available_moves == []:
             return True
         return False
@@ -121,18 +136,22 @@ class King(Piece):
             for j in range(-1, 2):
                 if i == j == 0 or not 0 <= target.i + i <= 7 or not 0 <= target.j + j <= 7:
                     continue
-                # temp_pos = pos
-                # temp_pos[target.i + i][target.j + j] = temp_pos[target.i][target.j]
-                # temp_pos[target.i][target.j] = None
-                if not pos[target.i + i][target.j + j] and not self.check(Square(target.i + i, target.j + j), pos):
-                    print(Square(target.i + i, target.j + j).name)
-                    return False
+                sq = Square(target.i + i, target.j + j)
+                if not pos[sq.i][sq.j] or pos[sq.i][sq.j].color != self.color:
+                    temp_pos = self.__generate_temp_pos(target, sq, pos)
+                    if not self.check(sq, temp_pos):
+                        print(self.color, "king can move to", sq.name)
+                        return False
         return True
 
     def __piece_can_be_taken(self, piece: Piece, pos: list):
         for evil_piece in self.__pieces_attacking_sq(piece.square, pos):
-            if piece.color != evil_piece.color:
+            if piece.color != evil_piece.color and not isinstance(evil_piece, King):
                 return True
+            elif isinstance(evil_piece, King):
+                temp_pos = self.__generate_temp_pos(evil_piece.square, piece.square, pos)
+                if not self.check(piece.square, temp_pos):
+                    return True
         return False
 
     def __check_can_be_blocked(self, target: Square, evil_piece: Piece, pos: list):
@@ -157,7 +176,7 @@ class King(Piece):
 
         for sq in squares_to_check:
             for piece in self.__pieces_attacking_sq(sq, pos):
-                if piece.color != evil_piece.color:
+                if piece.color != evil_piece.color and not isinstance(piece, King):
                     return True
 
         return False
@@ -167,12 +186,12 @@ class King(Piece):
         if target.i == evil_target.i:
             for j in range(min(target.j, evil_target.j) + 1, max(target.j, evil_target.j)):
                 for piece in self.__pieces_attacking_sq(Square(target.i, j), pos):
-                    if piece.color != evil_piece.color:
+                    if piece.color != evil_piece.color and not isinstance(piece, King):
                         return True
         elif target.j == evil_target.j:
             for i in range(min(target.i, evil_target.i) + 1, max(target.i, evil_target.i)):
                 for piece in self.__pieces_attacking_sq(Square(i, target.j), pos):
-                    if piece.color != evil_piece.color:
+                    if piece.color != evil_piece.color and not isinstance(piece, King):
                         return True
         return False
 
@@ -194,6 +213,12 @@ class King(Piece):
             if target in piece.available_squares(pos):
                 evil_pieces.append(piece)
         return evil_pieces
+
+    def __generate_temp_pos(self, king_sq: Square, sq: Square, pos: list):
+        temp_pos = [x[:] for x in pos]
+        temp_pos[sq.i][sq.j] = pos[king_sq.i][king_sq.j]
+        temp_pos[king_sq.i][king_sq.j] = None
+        return temp_pos
 
 
 class Queen(Piece):
@@ -517,28 +542,28 @@ def knight_squares(pos: list, piece: Knight):
     squares = []
 
     sq = Square(piece.square.i - 2, piece.square.j - 1)
-    if sq is not None and (not pos[sq.i][sq.j] or pos[sq.i][sq.j].color != piece.color):
+    if sq.valid_coords() and (not pos[sq.i][sq.j] or pos[sq.i][sq.j].color != piece.color):
         squares.append(sq)
     sq = Square(piece.square.i - 2, piece.square.j + 1)
-    if sq is not None and (not pos[sq.i][sq.j] or pos[sq.i][sq.j].color != piece.color):
+    if sq.valid_coords() and (not pos[sq.i][sq.j] or pos[sq.i][sq.j].color != piece.color):
         squares.append(sq)
     sq = Square(piece.square.i - 1, piece.square.j - 2)
-    if sq is not None and (not pos[sq.i][sq.j] or pos[sq.i][sq.j].color != piece.color):
+    if sq.valid_coords() and (not pos[sq.i][sq.j] or pos[sq.i][sq.j].color != piece.color):
         squares.append(sq)
     sq = Square(piece.square.i - 1, piece.square.j + 2)
-    if sq is not None and (not pos[sq.i][sq.j] or pos[sq.i][sq.j].color != piece.color):
+    if sq.valid_coords() and (not pos[sq.i][sq.j] or pos[sq.i][sq.j].color != piece.color):
         squares.append(sq)
     sq = Square(piece.square.i + 1, piece.square.j - 2)
-    if sq is not None and (not pos[sq.i][sq.j] or pos[sq.i][sq.j].color != piece.color):
+    if sq.valid_coords() and (not pos[sq.i][sq.j] or pos[sq.i][sq.j].color != piece.color):
         squares.append(sq)
     sq = Square(piece.square.i + 1, piece.square.j + 2)
-    if sq is not None and (not pos[sq.i][sq.j] or pos[sq.i][sq.j].color != piece.color):
+    if sq.valid_coords() and (not pos[sq.i][sq.j] or pos[sq.i][sq.j].color != piece.color):
         squares.append(sq)
     sq = Square(piece.square.i + 2, piece.square.j - 1)
-    if sq is not None and (not pos[sq.i][sq.j] or pos[sq.i][sq.j].color != piece.color):
+    if sq.valid_coords() and (not pos[sq.i][sq.j] or pos[sq.i][sq.j].color != piece.color):
         squares.append(sq)
     sq = Square(piece.square.i + 2, piece.square.j + 1)
-    if sq is not None and (not pos[sq.i][sq.j] or pos[sq.i][sq.j].color != piece.color):
+    if sq.valid_coords() and (not pos[sq.i][sq.j] or pos[sq.i][sq.j].color != piece.color):
         squares.append(sq)
 
     return squares
@@ -547,18 +572,20 @@ def knight_squares(pos: list, piece: Knight):
 def pond_squares(pos: list, piece: Pond):
     squares = []
 
-    sq = Square(piece.square.i + 1, piece.square.j - 1)
-    if piece.square.j > 0 and piece.square.i < 7 and piece.color == 'b' and isinstance(pos[sq.i][sq.j], Pond):
-        squares.append(sq)
-    sq = Square(piece.square.i + 1, piece.square.j + 1)
-    if piece.square.j < 7 and piece.square.i < 7 and piece.color == 'b' and isinstance(pos[sq.i][sq.j], Pond):
-        squares.append(sq)
-    sq = Square(piece.square.i - 1, piece.square.j - 1)
-    if piece.square.j > 0 and piece.square.i > 0 and piece.color == 'w' and isinstance(pos[sq.i][sq.j], Pond):
-        squares.append(sq)
-    sq = Square(piece.square.i - 1, piece.square.j + 1)
-    if piece.square.j < 7 and piece.square.i > 0 and piece.color == 'w' and isinstance(pos[sq.i][sq.j], Pond):
-        squares.append(sq)
+    if piece.color == 'w':
+        sq = Square(piece.square.i - 1, piece.square.j - 1)
+        if sq.valid_coords() and (not pos[sq.i][sq.j] or pos[sq.i][sq.j].color != piece.color):
+            squares.append(sq)
+        sq = Square(piece.square.i - 1, piece.square.j + 1)
+        if sq.valid_coords() and (not pos[sq.i][sq.j] or pos[sq.i][sq.j].color != piece.color):
+            squares.append(sq)
+    elif piece.color == 'b':
+        sq = Square(piece.square.i + 1, piece.square.j - 1)
+        if sq.valid_coords() and (not pos[sq.i][sq.j] or pos[sq.i][sq.j].color != piece.color):
+            squares.append(sq)
+        sq = Square(piece.square.i + 1, piece.square.j + 1)
+        if sq.valid_coords() and (not pos[sq.i][sq.j] or pos[sq.i][sq.j].color != piece.color):
+            squares.append(sq)
 
     return squares
 
@@ -571,9 +598,7 @@ def king_squares(pos: list, piece: King):
             sq = Square(piece.square.i + i, piece.square.j + j)
             if i == 0 and j == 0 or not 0 <= sq.i <= 7 or not 0 <= sq.j <= 7:
                 continue
-            if pos[sq.i][sq.j] and pos[sq.i][sq.j].color == piece.color:
-                continue
-            if not pos[sq.i][sq.j]:
+            if not pos[sq.i][sq.j] or pos[sq.i][sq.j].color != piece.color:
                 squares.append(sq)
 
     return squares

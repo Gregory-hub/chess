@@ -3,8 +3,6 @@ class Square:
     j = -1
 
     def __init__(self, i: int, j: int):
-        if not 0 <= i <= 7 or not 0 <= j <= 7:
-            return None
         self.i = i
         self.j = j
         self.name = squarename(i, j)
@@ -13,6 +11,11 @@ class Square:
         if not 0 <= self.i <= 7 or not 0 <= self.j <= 7:
             return False
         return True
+
+    def set_coords(self, i: int, j: int):
+        self.i = i
+        self.j = j
+        self.name = squarename(i, j)
 
     def __eq__(self, other):
         if self.i == other.i and self.j == other.j:

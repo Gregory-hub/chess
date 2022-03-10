@@ -7,7 +7,7 @@ from flask_login import current_user
 from chess import db, socketio
 from chess.auth import get_user_from_username_or_email
 from chess.models import Game, Player
-from chess.pieces import letter_to_piece, King, Pond
+from chess.pieces import letter_to_piece, get_pieces, Piece, King, Pond, Knight, Rook, Bishop, Queen
 from chess.square import Square
 
 
@@ -17,7 +17,7 @@ def create_game(length: int, supplement: int, opponent_username: str, current_pl
         start_time=datetime.now(timezone.utc),
         game_length=timedelta(seconds=length),
         supplement=timedelta(seconds=supplement),
-        fen='r2qk2r/8/8/8/8/8/8/3QK3 w KQkq - 0 1'
+        fen='r3k2r/p6p/8/8/8/8/P6P/R3K2R w KQkq - 0 1'
     )
     if current_player_color == 'random':
         current_player_color = choice(['black', 'white'])
@@ -102,7 +102,8 @@ def fen_pos_is_valid(fen_pos: str):
 
 
 def move_is_legal(game: Game, old_pos: list, new_pos: list):
-    # castling = game.get_castling_availability()
+    castling = game.get_castling_availability()
+    print(castling)
     # enpassand_target = game.get_enpassand_target()
     # halfmove_clock = game.get_halfmove_clock()
     # moves_number = game.get_fullmove_number()
@@ -132,14 +133,15 @@ def move_is_legal(game: Game, old_pos: list, new_pos: list):
         print('Target:', target.name)
         print('Move color:', piece.color)
         print('Check:', check)
-        print('Stalemate: ', stalemate)
+        print('Stalemate:', stalemate)
         print('Checkmate:', checkmate)
+        print('Insufficient material:', insufficient_material(new_pos))
         print()
 
     if game.get_active_color() != piece.color:
         print("Invalid color")
         return False
-    if not piece.valid_move(source, target):
+    if not piece.valid_move(source, target, old_pos, castling):
         print("Invalid move")
         return False
     if piece.moved_throught_piece(source, target, old_pos):
@@ -232,3 +234,42 @@ def valid_diagonal_pond_move(source: Square, target: Square, old_pos: list):
     if abs(source.j - target.j) == 1 and old_pos[target.i][target.j] is None:
         return False
     return True
+
+
+def insufficient_material(pos: list):
+    w_pieces = get_pieces(pos, color='w')
+    b_pieces = get_pieces(pos, color='b')
+    w_insufficient = insufficient_material_for_color(w_pieces, b_pieces, 'w')
+    b_insufficient = insufficient_material_for_color(b_pieces, w_pieces, 'b')
+    if w_insufficient and b_insufficient:
+        return True
+    return False
+
+
+def insufficient_material_for_color(pieces: list, opponents_pieces: str, color: str):
+    knights_count = count_pieces(pieces, Knight)
+    bishops_count = count_pieces(pieces, Bishop)
+    enough_to_mate_pieces_count = count_pieces(pieces, Queen)
+    enough_to_mate_pieces_count += count_pieces(pieces, Rook)
+    enough_to_mate_pieces_count += count_pieces(pieces, Pond)
+
+    if len(pieces) == 1:
+        return True
+    if enough_to_mate_pieces_count != 0:
+        return False
+    if knights_count == 1 and bishops_count == 0:
+        return True
+    if knights_count == 0 and bishops_count == 1:
+        return True
+    if len(opponents_pieces) == 1 and len(pieces) == 3 and knights_count == 2:
+        return True
+
+    return False
+
+
+def count_pieces(pieces: list, piece_type: Piece):
+    piece_count = 0
+    for piece in pieces:
+        if isinstance(piece, piece_type):
+            piece_count += 1
+    return piece_count

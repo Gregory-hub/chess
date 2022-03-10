@@ -13,7 +13,7 @@ class Piece(ABC):
             self.letter = self.letter.upper()
         self.square = sq
 
-    def valid_move(self, source: Square, target: Square):
+    def valid_move(self, source: Square, target: Square, pos: list, castling: str):
         pass
 
     def moved_throught_piece(self, source: Square, target: Square, pos: list):
@@ -37,9 +37,13 @@ class Piece(ABC):
 class King(Piece):
     letter = 'k'
 
-    def valid_move(self, source: Square, target: Square):
+    def valid_move(self, source: Square, target: Square, pos: list, castling: str):
         if source is None or target is None:
             return False
+
+        if castling != '-':
+            if self.__valid_castling(source, target, pos, castling):
+                return True
 
         if abs(target.i - source.i) <= 1 and abs(target.j - source.j) <= 1:
             return True
@@ -56,7 +60,6 @@ class King(Piece):
                     continue
 
         potential_evil_pieces = self.__pieces_attacking_sq(target, pos)
-        print(self.color, potential_evil_pieces)
         for piece in potential_evil_pieces:
             if self.color != piece.color:
                 return True
@@ -65,22 +68,15 @@ class King(Piece):
 
     def checkmate(self, target: Square, pos: list):
         if not self.check(target, pos):
-            print("Not check")
             return False
         if not self.__king_cannot_move(target, pos):
-            print("King can move")
             return False
 
         evil_pieces = self.__pieces_attacking_sq(target, pos)
         if len(evil_pieces) == 1:
-            print("Check by one peice")
             evil_piece = evil_pieces[0]
             if self.__piece_can_be_taken(evil_piece, pos) or self.__check_can_be_blocked(target, evil_piece, pos):
-                print("Piece can be taken or check can be blocked")
-                print(f"\tPiece can be taken: {self.__piece_can_be_taken(evil_piece, pos)}")
-                print(f"\tCheck can be blocked: {self.__check_can_be_blocked(target, evil_piece, pos)}({pos[target.i][target.j]})")
                 return False
-        print()
         return True
 
     def stalemate(self, target: Square, pos: list):
@@ -88,8 +84,11 @@ class King(Piece):
             return True
         return False
 
+    def castles(self, source: Square, target: Square, pos: list, castling: str):
+        return self.__valid_castling(source, target, pos, castling)
+
     def __no_moves(self, target: Square, pos: list):
-        pieces = self.__get_all_pieces(pos)
+        pieces = get_pieces(pos)
         pieces = self.__filter_pieces(pieces, color=self.color)
         kings = [piece for piece in pieces if isinstance(piece, King)]
         pieces = [piece for piece in pieces if not isinstance(piece, King)]
@@ -101,22 +100,12 @@ class King(Piece):
                     sq = Square(king.square.i + i, king.square.j + j)
                     if i == 0 and j == 0 or not 0 <= sq.i <= 7 or not 0 <= sq.j <= 7:
                         continue
-                    temp_pos = self.__generate_temp_pos(king.square, sq, pos)
-                    if (not pos[sq.i][sq.j] or pos[sq.i][sq.j].color != king.color) and not king.check(sq, temp_pos):
+                    if (not pos[sq.i][sq.j] or pos[sq.i][sq.j].color != king.color) and not self.__gets_in_check(king.square, sq, pos):
                         available_moves.append(sq)
 
-        print("Available moves:", [sq.name for sq in available_moves])
         if available_moves == []:
             return True
         return False
-
-    def __get_all_pieces(self, pos: list):
-        pieces = []
-        for i in range(8):
-            for j in range(8):
-                if pos[i][j]:
-                    pieces.append(pos[i][j])
-        return pieces
 
     def __filter_pieces(self, pieces: list, color: str):
         filtered_pieces = []
@@ -138,9 +127,7 @@ class King(Piece):
                     continue
                 sq = Square(target.i + i, target.j + j)
                 if not pos[sq.i][sq.j] or pos[sq.i][sq.j].color != self.color:
-                    temp_pos = self.__generate_temp_pos(target, sq, pos)
-                    if not self.check(sq, temp_pos):
-                        print(self.color, "king can move to", sq.name)
+                    if not self.__gets_in_check(target, sq, pos):
                         return False
         return True
 
@@ -149,8 +136,7 @@ class King(Piece):
             if piece.color != evil_piece.color and not isinstance(evil_piece, King):
                 return True
             elif isinstance(evil_piece, King):
-                temp_pos = self.__generate_temp_pos(evil_piece.square, piece.square, pos)
-                if not self.check(piece.square, temp_pos):
+                if not self.__gets_in_check(evil_piece.square, piece.square, pos):
                     return True
         return False
 
@@ -207,7 +193,7 @@ class King(Piece):
         return not_empty, is_evil_piece
 
     def __pieces_attacking_sq(self, target: Square, pos: list):
-        pieces = self.__get_all_pieces(pos)
+        pieces = get_pieces(pos)
         evil_pieces = []
         for piece in pieces:
             if target in piece.available_squares(pos):
@@ -220,11 +206,55 @@ class King(Piece):
         temp_pos[king_sq.i][king_sq.j] = None
         return temp_pos
 
+    def __gets_in_check(self, king_sq, sq, pos):
+        temp_pos = self.__generate_temp_pos(king_sq, sq, pos)
+        if self.check(sq, temp_pos):
+            return True
+        return False
+
+    def __can_castle(self, castling: str):
+        long, short = False, False
+        q, k = 'q', 'k'
+        if self.color == 'w':
+            q = q.upper()
+            k = k.upper()
+
+        if q in castling:
+            long = True
+        if k in castling:
+            short = True
+
+        return long, short
+
+    def __valid_castling(self, source: Square, target: Square, pos: list, castling: str):
+        if self.check(target, pos):
+            return False
+        long, short = self.__can_castle(castling)
+        if self.color == 'b' and not (source.name == 'e8' and target.i == 0):
+            return False
+        if self.color == 'w' and not (source.name == 'e1' and target.i == 7):
+            return False
+        if target.j in [0, 1, 2] and long:
+            if pos[target.i][1]:
+                return False
+            if pos[target.i][2] or self.__gets_in_check(source, Square(target.i, 2), pos):
+                return False
+            if pos[target.i][3] or self.__gets_in_check(source, Square(target.i, 3), pos):
+                return False
+            return True
+        if target.j in [6, 7] and short:
+            if pos[target.i][5] or self.__gets_in_check(source, Square(target.i, 5), pos):
+                return False
+            if pos[target.i][6] or self.__gets_in_check(source, Square(target.i, 6), pos):
+                return False
+            return True
+        return False
+
 
 class Queen(Piece):
     letter = 'q'
 
-    def valid_move(self, source: Square, target: Square):
+    def valid_move(self, source: Square, target: Square, pos: list, castling: str):
         if source is None or target is None:
             return False
 
@@ -269,7 +299,7 @@ class Queen(Piece):
 class Rook(Piece):
     letter = 'r'
 
-    def valid_move(self, source: Square, target: Square):
+    def valid_move(self, source: Square, target: Square, pos: list, castling: str):
         if source is None or target is None:
             return False
 
@@ -292,7 +322,7 @@ class Rook(Piece):
 class Bishop(Piece):
     letter = 'b'
 
-    def valid_move(self, source: Square, target: Square):
+    def valid_move(self, source: Square, target: Square, pos: list, castling: str):
         if source is None or target is None:
             return False
 
@@ -318,7 +348,7 @@ class Bishop(Piece):
 class Knight(Piece):
     letter = 'n'
 
-    def valid_move(self, source: Square, target: Square):
+    def valid_move(self, source: Square, target: Square, pos: list, castling: str):
         if source is None or target is None:
             return False
 
@@ -335,7 +365,7 @@ class Knight(Piece):
 class Pond(Piece):
     letter = 'p'
 
-    def valid_move(self, source: Square, target: Square):
+    def valid_move(self, source: Square, target: Square, pos: list, castling: str):
         if source is None or target is None:
             return False
 
@@ -602,3 +632,12 @@ def king_squares(pos: list, piece: King):
                 squares.append(sq)
 
     return squares
+
+
+def get_pieces(pos: list, color: str = None):
+    pieces = []
+    for i in range(8):
+        for j in range(8):
+            if pos[i][j] and (color is None or color == pos[i][j].color):
+                pieces.append(pos[i][j])
+    return pieces

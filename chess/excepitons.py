@@ -9,3 +9,9 @@ class ColorError(ValueError):
             return f"'{self.color}' -> {self.message}"
         else:
             return self.message
+
+
+class KingInitializingException(ValueError):
+    def __init__(self):
+        self.message = "Invalid king initialization"
+        super().__init__(self.message)

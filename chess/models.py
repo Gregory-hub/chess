@@ -99,6 +99,7 @@ class Move(db.Model):
     source = db.Column(db.String(10))
     target = db.Column(db.String(10))
     piece = db.Column(db.String(1))
+    castling = db.Column(db.Boolean, nullable=False, default=False)
 
     def __repr__(self):
         return f'Move(game_id={self.game_id}, index={self.index}, piece={self.piece}, source={self.source}, target={self.target})'

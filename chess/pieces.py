@@ -87,6 +87,12 @@ class King(Piece):
     def castles(self, source: Square, target: Square, pos: list, castling: str):
         return self.__valid_castling(source, target, pos, castling)
 
+    def castles_short(self, target: Square):
+        return target.j in [6, 7]
+    
+    def castles_long(self, target: Square):
+        return target.j in [0, 1, 2]
+
     def __no_moves(self, target: Square, pos: list):
         pieces = get_pieces(pos)
         pieces = self.__filter_pieces(pieces, color=self.color)
@@ -234,7 +240,7 @@ class King(Piece):
             return False
         if self.color == 'w' and not (source.name == 'e1' and target.i == 7):
             return False
-        if target.j in [0, 1, 2] and long:
+        if self.castles_long(target) and long:
             if pos[target.i][1]:
                 return False
             if pos[target.i][2] or self.__gets_in_check(source, Square(target.i, 2), pos):
@@ -242,7 +248,7 @@ class King(Piece):
             if pos[target.i][3] or self.__gets_in_check(source, Square(target.i, 3), pos):
                 return False
             return True
-        if target.j in [6, 7] and short:
+        if self.castles_short(target) and short:
             if pos[target.i][5] or self.__gets_in_check(source, Square(target.i, 5), pos):
                 return False
             if pos[target.i][6] or self.__gets_in_check(source, Square(target.i, 6), pos):

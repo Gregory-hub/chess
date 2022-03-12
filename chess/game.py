@@ -80,9 +80,10 @@ def move(game_id: int, new_fen_pos: str):
         print()
 
     if fen_pos_is_valid(new_fen_pos) and move_is_legal(game, old_pos, new_pos):
-        piece, source, target = get_move_info(old_pos, new_pos)
-        game.add_move(piece.letter, source.name, target.name)
-        game.update_fen(new_fen_pos)
+        piece, source, target, castles = get_move_info(old_pos, new_pos, game)
+        if castles:
+            new_fen_pos = get_castle_fen_pos(target, new_fen_pos)
+        commit_move(piece, source, target, new_fen_pos, game)
         socketio.emit('fen_pos', new_fen_pos)
     else:
         socketio.emit('fen_pos', old_fen_pos)
@@ -103,7 +104,6 @@ def fen_pos_is_valid(fen_pos: str):
 
 def move_is_legal(game: Game, old_pos: list, new_pos: list):
     castling = game.get_castling_availability()
-    print(castling)
     # enpassand_target = game.get_enpassand_target()
     # halfmove_clock = game.get_halfmove_clock()
     # moves_number = game.get_fullmove_number()
@@ -111,7 +111,7 @@ def move_is_legal(game: Game, old_pos: list, new_pos: list):
     if moves_count(old_pos, new_pos) != 1:
         return False
 
-    piece, source, target = get_move_info(old_pos, new_pos)
+    piece, source, target, _ = get_move_info(old_pos, new_pos, game)
     kings = find_kings(new_pos)
     check = False
     checkmate = False
@@ -183,6 +183,25 @@ def get_pos(fen_pos: str):
     return pos_matrix
 
 
+def pos_to_fen_pos(pos: list):
+    fen_pos = ''
+    for i in range(8):
+        j = 0
+        while j < 8:
+            empty_count = 0
+            while j < 8 and pos[i][j] is None:
+                empty_count += 1
+                j += 1
+            if empty_count != 0:
+                fen_pos += str(empty_count)
+            if j < 8:
+                fen_pos += pos[i][j].letter
+                j += 1
+        if i != 7:
+            fen_pos += '/'
+    return fen_pos
+
+
 def moves_count(old_pos: list, new_pos: list):
     changes_count = 0
     for i in range(8):
@@ -192,8 +211,10 @@ def moves_count(old_pos: list, new_pos: list):
     return ceil(changes_count / 2)
 
 
-def get_move_info(old_pos: list, new_pos: list):
+def get_move_info(old_pos: list, new_pos: list, game: Game):
     piece, source, target = None, None, None
+    castles = False
+    castling = game.get_castling_availability()
     for i in range(8):
         for j in range(8):
             if old_pos[i][j] is not None and new_pos[i][j] is None:
@@ -201,7 +222,9 @@ def get_move_info(old_pos: list, new_pos: list):
                 source = Square(i, j)
             elif old_pos[i][j] != new_pos[i][j]:
                 target = Square(i, j)
-    return piece, source, target
+    if isinstance(piece, King) and piece.castles(source, target, old_pos, castling):
+        castles = True
+    return piece, source, target, castles
 
 
 def takes_their_own_piece(target: Square, old_pos: list, new_pos: list):
@@ -273,3 +296,21 @@ def count_pieces(pieces: list, piece_type: Piece):
         if isinstance(piece, piece_type):
             piece_count += 1
     return piece_count
+
+
+def commit_move(piece: Piece, source: Square, target: Square, new_fen_pos: str, game: Game):
+    game.add_move(piece.letter, source.name, target.name)
+    game.update_fen(new_fen_pos)
+
+
+def get_castle_fen_pos(target: Square, fen_pos: str):
+    pos = get_pos(fen_pos)
+    if pos[target.i][target.j].castles_long(target):
+        pos[target.i][target.j + 1] = pos[target.i][0]
+        pos[target.i][0] = None
+    elif pos[target.i][target.j].castles_short(target):
+        pos[target.i][target.j - 1] = pos[target.i][7]
+        pos[target.i][7] = None
+    else:
+        raise ValueError(message="Castles neither short nor long")
+    return pos_to_fen_pos(pos)

@@ -83,7 +83,7 @@ def move(game_id: int, new_fen_pos: str):
         piece, source, target, castles = get_move_info(old_pos, new_pos, game)
         if castles:
             new_fen_pos = get_castle_fen_pos(target, new_fen_pos)
-        commit_move(piece, source, target, new_fen_pos, game)
+        commit_move(piece, source, target, new_fen_pos, game, get_castling_str(source, target, new_pos, game))
         socketio.emit('fen_pos', new_fen_pos)
     else:
         socketio.emit('fen_pos', old_fen_pos)
@@ -298,19 +298,59 @@ def count_pieces(pieces: list, piece_type: Piece):
     return piece_count
 
 
-def commit_move(piece: Piece, source: Square, target: Square, new_fen_pos: str, game: Game):
+def commit_move(piece: Piece, source: Square, target: Square, new_fen_pos: str, game: Game, castling_direction: str):
     game.add_move(piece.letter, source.name, target.name)
-    game.update_fen(new_fen_pos)
+    game.update_fen(new_fen_pos, castling_direction)
 
 
 def get_castle_fen_pos(target: Square, fen_pos: str):
     pos = get_pos(fen_pos)
     if pos[target.i][target.j].castles_long(target):
-        pos[target.i][target.j + 1] = pos[target.i][0]
+        king = pos[target.i][target.j]
+        pos[target.i][target.j] = None
+        pos[target.i][2] = king
+        pos[target.i][3] = pos[target.i][0]
         pos[target.i][0] = None
     elif pos[target.i][target.j].castles_short(target):
-        pos[target.i][target.j - 1] = pos[target.i][7]
+        king = pos[target.i][target.j]
+        pos[target.i][target.j] = None
+        pos[target.i][6] = king
+        pos[target.i][5] = pos[target.i][7]
         pos[target.i][7] = None
     else:
         raise ValueError(message="Castles neither short nor long")
     return pos_to_fen_pos(pos)
+
+
+def get_castling_str(source: Square, target: Square, pos: list, game: Game):
+    piece = pos[target.i][target.j]
+    castling_str = ""
+    castling = game.get_castling_availability()
+
+    if isinstance(piece, King):
+        if 'K' in castling and piece.color != 'w':
+            castling_str += 'K'
+        if 'Q' in castling and piece.color != 'w':
+            castling_str += 'Q'
+        if 'k' in castling and piece.color != 'b':
+            castling_str += 'k'
+        if 'q' in castling and piece.color != 'b':
+            castling_str += 'q'
+
+    elif isinstance(piece, Rook):
+        if 'K' in castling and not (source.j == 7 and pos[target.i][target.j].color == 'w'):
+            castling_str += 'K'
+        if 'Q' in castling and not (source.j == 0 and pos[target.i][target.j].color == 'w'):
+            castling_str += 'Q'
+        if 'k' in castling and not (source.j == 7 and pos[target.i][target.j].color == 'b'):
+            castling_str += 'k'
+        if 'q' in castling and not (source.j == 0 and pos[target.i][target.j].color == 'b'):
+            castling_str += 'q'
+
+    else:
+        castling_str = game.get_castling_availability()
+
+    if castling_str == "":
+        castling_str = "-"
+
+    return castling_str

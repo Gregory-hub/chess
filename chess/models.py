@@ -54,9 +54,9 @@ class Game(db.Model):
     def get_fullmove_number(self):
         return self.fen.split()[5]
 
-    def update_fen(self, new_fen_pos: str):
-        color = "b" if self.get_active_color() == "w" else "w"
-        self.fen = new_fen_pos + " " + color + " KQkq - 0 1"
+    def update_fen(self, new_fen_pos: str, castling_str: str):
+        color = 'b' if self.get_active_color() == 'w' else 'w'
+        self.fen = new_fen_pos + " " + color + " " + castling_str + " " + "- 0 1"
         db.session.commit()
 
     def add_move(self, piece: str, source: str, target: str):

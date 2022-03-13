@@ -89,7 +89,7 @@ class King(Piece):
 
     def castles_short(self, target: Square):
         return target.j in [6, 7]
-    
+
     def castles_long(self, target: Square):
         return target.j in [0, 1, 2]
 

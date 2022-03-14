@@ -17,7 +17,7 @@ def create_game(length: int, supplement: int, opponent_username: str, current_pl
         start_time=datetime.now(timezone.utc),
         game_length=timedelta(seconds=length),
         supplement=timedelta(seconds=supplement),
-        fen='r3k2r/p6p/8/8/8/8/P6P/R3K2R w KQkq - 0 1'
+        fen='r3k2r/pppppppp/8/8/8/8/PPPPPPPP/R3K2R w KQkq - 0 1'
     )
     if current_player_color == 'random':
         current_player_color = choice(['black', 'white'])
@@ -80,10 +80,16 @@ def move(game_id: int, new_fen_pos: str):
         print()
 
     if fen_pos_is_valid(new_fen_pos) and move_is_legal(game, old_pos, new_pos):
+
         piece, source, target, castles = get_move_info(old_pos, new_pos, game)
         if castles:
             new_fen_pos = get_castle_fen_pos(target, new_fen_pos)
-        commit_move(piece, source, target, new_fen_pos, game, get_castling_str(source, target, new_pos, game))
+        castling_direction = get_castling_str(source, target, new_pos, game)
+        en_passand_target = get_en_passand_target(source, target, piece)
+
+        game.add_move(piece.letter, source.name, target.name)
+        game.update_fen(new_fen_pos, castling_direction, en_passand_target)
+
         socketio.emit('fen_pos', new_fen_pos)
     else:
         socketio.emit('fen_pos', old_fen_pos)
@@ -104,7 +110,7 @@ def fen_pos_is_valid(fen_pos: str):
 
 def move_is_legal(game: Game, old_pos: list, new_pos: list):
     castling = game.get_castling_availability()
-    # enpassand_target = game.get_enpassand_target()
+    en_passand_target = game.get_enpassand_target()
     # halfmove_clock = game.get_halfmove_clock()
     # moves_number = game.get_fullmove_number()
 
@@ -141,7 +147,7 @@ def move_is_legal(game: Game, old_pos: list, new_pos: list):
     if game.get_active_color() != piece.color:
         print("Invalid color")
         return False
-    if not piece.valid_move(source, target, old_pos, castling):
+    if not piece.valid_move(source, target, old_pos, castling, en_passand_target):
         print("Invalid move")
         return False
     if piece.moved_throught_piece(source, target, old_pos):
@@ -156,10 +162,10 @@ def move_is_legal(game: Game, old_pos: list, new_pos: list):
     if current_players_king.check(current_players_king.square, new_pos):
         print("Cannot move this because it's check")
         return False
-    if isinstance(piece, Pond) and not pond_takes_in_valid_way(source, target, old_pos):
+    if isinstance(piece, Pond) and not pond_takes_in_valid_way(source, target, old_pos, en_passand_target):
         print("Pond tries to take piece in front")
         return False
-    if isinstance(piece, Pond) and not valid_diagonal_pond_move(source, target, old_pos):
+    if isinstance(piece, Pond) and not valid_diagonal_pond_move(source, target, old_pos, en_passand_target):
         print("Pond steps on empty square diagonally")
         return False
 
@@ -247,14 +253,20 @@ def find_kings(pos: list):
     return kings
 
 
-def pond_takes_in_valid_way(source: Square, target: Square, old_pos: list):
+def pond_takes_in_valid_way(source: Square, target: Square, old_pos: list, en_passand_target: str):
+    if old_pos[source.i][source.j].color == 'w':
+        if source.i == 3 and target.i == 2 and abs(source.j - target.j) == 1 and target.name == en_passand_target:
+            return True
+    elif old_pos[source.i][source.j].color == 'b':
+        if source.i == 4 and target.i == 5 and abs(source.j - target.j) == 1 and target.name == en_passand_target:
+            return True
     if source.j == target.j and old_pos[target.i][target.j] is not None:
         return False
     return True
 
 
-def valid_diagonal_pond_move(source: Square, target: Square, old_pos: list):
-    if abs(source.j - target.j) == 1 and old_pos[target.i][target.j] is None:
+def valid_diagonal_pond_move(source: Square, target: Square, old_pos: list, en_passand_target: str):
+    if abs(source.j - target.j) == 1 and old_pos[target.i][target.j] is None and target.name != en_passand_target:
         return False
     return True
 
@@ -296,11 +308,6 @@ def count_pieces(pieces: list, piece_type: Piece):
         if isinstance(piece, piece_type):
             piece_count += 1
     return piece_count
-
-
-def commit_move(piece: Piece, source: Square, target: Square, new_fen_pos: str, game: Game, castling_direction: str):
-    game.add_move(piece.letter, source.name, target.name)
-    game.update_fen(new_fen_pos, castling_direction)
 
 
 def get_castle_fen_pos(target: Square, fen_pos: str):
@@ -354,3 +361,10 @@ def get_castling_str(source: Square, target: Square, pos: list, game: Game):
         castling_str = "-"
 
     return castling_str
+
+
+def get_en_passand_target(source: Square, target: Square, piece: Piece):
+    en_passand_target = '-'
+    if isinstance(piece, Pond) and abs(source.i - target.i) == 2:
+        en_passand_target = Square((target.i + source.i) // 2, target.j).name
+    return en_passand_target

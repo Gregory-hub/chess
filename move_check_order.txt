@@ -10,10 +10,13 @@
 3. checkmate +
 4. stalemate +
 5. draw
-6. castling
-    a. castling is legal
+6. castling +
+    a. castling is legal +
 7. en passand
 8. promoting
+9. time control
+10. Maia bot
+11. game explorer
 
            black
       0 1 2 3 4 5 6 7

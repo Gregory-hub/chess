@@ -13,7 +13,7 @@ class Piece(ABC):
             self.letter = self.letter.upper()
         self.square = sq
 
-    def valid_move(self, source: Square, target: Square, pos: list, castling: str):
+    def valid_move(self, source: Square, target: Square, pos: list, castling: str, en_passand_target: str):
         pass
 
     def moved_throught_piece(self, source: Square, target: Square, pos: list):
@@ -37,7 +37,7 @@ class Piece(ABC):
 class King(Piece):
     letter = 'k'
 
-    def valid_move(self, source: Square, target: Square, pos: list, castling: str):
+    def valid_move(self, source: Square, target: Square, pos: list, castling: str, en_passand_target: str):
         if source is None or target is None:
             return False
 
@@ -305,7 +305,7 @@ class Queen(Piece):
 class Rook(Piece):
     letter = 'r'
 
-    def valid_move(self, source: Square, target: Square, pos: list, castling: str):
+    def valid_move(self, source: Square, target: Square, pos: list, castling: str, en_passand_target: str):
         if source is None or target is None:
             return False
 
@@ -328,7 +328,7 @@ class Rook(Piece):
 class Bishop(Piece):
     letter = 'b'
 
-    def valid_move(self, source: Square, target: Square, pos: list, castling: str):
+    def valid_move(self, source: Square, target: Square, pos: list, castling: str, en_passand_target: str):
         if source is None or target is None:
             return False
 
@@ -354,7 +354,7 @@ class Bishop(Piece):
 class Knight(Piece):
     letter = 'n'
 
-    def valid_move(self, source: Square, target: Square, pos: list, castling: str):
+    def valid_move(self, source: Square, target: Square, pos: list, castling: str, en_passand_target: str):
         if source is None or target is None:
             return False
 
@@ -371,7 +371,7 @@ class Knight(Piece):
 class Pond(Piece):
     letter = 'p'
 
-    def valid_move(self, source: Square, target: Square, pos: list, castling: str):
+    def valid_move(self, source: Square, target: Square, pos: list, castling: str, en_passand_target: str):
         if source is None or target is None:
             return False
 

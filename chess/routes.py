@@ -43,9 +43,10 @@ def invite(data: dict):
 
 @socketio.event
 @authentication_required
-def fen_pos(fen_pos: str):
+def fen_pos(fen_pos: str):  # , promoting_piece: str):
+    promoting_piece = '-'
     game_id = int(request.referrer.split('/')[-1])
-    move(game_id, fen_pos)
+    move(game_id, fen_pos, promoting_piece)
 
 
 # routes

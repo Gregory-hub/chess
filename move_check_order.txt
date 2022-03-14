@@ -12,7 +12,7 @@
 5. draw
 6. castling +
     a. castling is legal +
-7. en passand
+7. en passand +
 8. promoting
 9. time control
 10. Maia bot

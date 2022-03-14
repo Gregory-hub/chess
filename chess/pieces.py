@@ -605,6 +605,7 @@ def knight_squares(pos: list, piece: Knight):
     return squares
 
 
+# TODO: add en passand squares
 def pond_squares(pos: list, piece: Pond):
     squares = []
 

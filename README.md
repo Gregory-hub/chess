@@ -5,7 +5,7 @@ Online chess game created with flask, sqlalchemy and socketio
   2. Open terminal
   3. Go to your installation folder:
       - chdir path\to\folder
-      - F:                # to change disk to F:
+      - F:                /t/t/t/t# to change disk to F:
   4. Download repo:
       - git clone https://github.com/Gregory-hub/chess.git
   5. Go to chess folder:

@@ -19,4 +19,4 @@ venv/
 media/*
 !media/default.jpeg
 
-# sqlite.db
+sqlite.db

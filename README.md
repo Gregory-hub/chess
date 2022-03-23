@@ -16,10 +16,10 @@ Online chess game created with flask, sqlalchemy and socketio
       >>> pip install -r requirements.txt
       >>> python -m pip install -r requirements.txt   # if previous did not work
   8. If you get an error installing netifaces, install Visual Studio Build Tools: 
-      - https://visualstudio.microsoft.com/ru/downloads/?q=build+tools
-      - 
+      * https://visualstudio.microsoft.com/ru/downloads/?q=build+tools
+      * 
 ![photo_2022-03-23_16-10-25](https://user-images.githubusercontent.com/52703175/159745023-96951170-4080-4462-a176-5833b5c88702.jpg)
-      - Make shure to install MSCV containing C++ tools
+      * Make shure to install MSCV containing C++ tools
   ![photo_2022-03-23_16-10-24](https://user-images.githubusercontent.com/52703175/159745551-57de11c4-fd43-4195-98ee-e76ba4b95e04.jpg)
   9. Go to python shell:
       >>> python

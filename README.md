@@ -15,7 +15,7 @@ Online chess game created with flask, sqlalchemy and socketio
   7. Install requirements from requirements.txt:
       >>> pip install -r requirements.txt
       >>> python -m pip install -r requirements.txt   # if previous did not work
-  8. If you get an error installing netifaces, install Visual Studio Build Tools:
+  8. If you get an error installing netifaces, install Visual Studio Build Tools: 
       8.1. https://visualstudio.microsoft.com/ru/downloads/?q=build+tools
       8.2. 
 ![photo_2022-03-23_16-10-25](https://user-images.githubusercontent.com/52703175/159745023-96951170-4080-4462-a176-5833b5c88702.jpg)

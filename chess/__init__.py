@@ -16,7 +16,7 @@ port = 5000
 
 app = Flask(__name__, template_folder=os.path.abspath('templates'), static_folder=os.path.abspath('static'))
 app.secret_key = os.urandom(16)
-app.config["SQLALCHEMY_DATABASE_URI"] = 'sqlite:////' + os.path.join(os.getcwd(), 'sqlite.db')
+app.config["SQLALCHEMY_DATABASE_URI"] = 'sqlite:///' + os.path.join(os.getcwd(), 'sqlite.db')
 db = SQLAlchemy(app)
 socketio = SocketIO(app)
 hasher = Bcrypt(app)

@@ -20,7 +20,7 @@ def create_game(length: int, supplement: int, opponent_username: str, current_pl
         fen='r3k2r/pppppppp/8/8/8/8/PPPPPPPP/R3K2R w KQkq - 0 1'
     )
     if current_player_color == 'random':
-        current_player_color = choice(['black', 'white'])
+        current_player_color = choice(['b', 'w'])
     game.players = create_players(opponent_username, current_player_color)
 
     db.session.add(game)
@@ -47,7 +47,7 @@ def create_players(opponent_username: str, current_player_color: str):
     )
     player1.user = current_user
 
-    colors = ['black', 'white']
+    colors = ['b', 'w']
     colors.remove(current_player_color)
     player2_color = colors[0]
 

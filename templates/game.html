@@ -1,7 +1,7 @@
 {% extends 'layout.html' %}
 
 {% block extra_links %}
-<link rel="stylesheet" href="{{ url_for('static', filename='css/chessboard-1.0.0.css') }}">
+<link rel="stylesheet" href="{{ url_for('static', filename='cm-chessboard/assets/styles/cm-chessboard.css') }}">
 {% endblock extra_links %}
 
 {% block content %}
@@ -53,6 +53,5 @@
 {% endblock content %}
 
 {% block extra_scripts %}
-<script src="{{ url_for('static', filename='js/chessboard-1.0.0.js') }}"></script>
-<script src="{{ url_for('static', filename='js/chessboard.js') }}"></script>
+    <script src={{ url_for('static', filename='js/chessboard.js') }} type="module"></script>
 {% endblock extra_scripts %}

@@ -88,8 +88,8 @@ class StartGameForm(FlaskForm):
     ], validators=[DataRequired()])
 
     player_color = SelectField('Your color', choices=[
-        ('black', 'black'),
-        ('white', 'white'),
+        ('b', 'black'),
+        ('w', 'white'),
         ('random', 'random'),
     ])
 

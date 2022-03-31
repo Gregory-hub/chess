@@ -43,10 +43,9 @@ def invite(data: dict):
 
 @socketio.event
 @authentication_required
-def fen_pos(fen_pos: str):  # , promoting_piece: str):
-    promoting_piece = '-'
+def fen_pos(fen_pos: str, promotion: str):
     game_id = int(request.referrer.split('/')[-1])
-    move(game_id, fen_pos, promoting_piece)
+    move(game_id, fen_pos, promotion)
 
 
 # routes
@@ -108,7 +107,7 @@ def game(id: int):
             'game.html',
             current_player=game_conf['current_player'],
             opponent=game_conf['opponent'],
-            fen_pos=game_conf['fen_pos']
+            fen=game_conf['fen']
         )
     else:
         flash('Error: game does not exist')

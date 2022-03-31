@@ -1,74 +1,60 @@
-let socket = io(location.host)
-import {INPUT_EVENT_TYPE, COLOR, Chessboard, MARKER_TYPE} from "../cm-chessboard/src/cm-chessboard/Chessboard.js"
 
-function send_fen(source, target, piece, pos, old_pos, orientation) {
-    let fen = Chessboard.objToFen(pos)
-    if (target == 'offboard') {
-        fen = Chessboard.objToFen(old_pos)
-    }
-    socket.emit('fen_pos', fen)
-}
+let socket = io(location.host)
+
+import {INPUT_EVENT_TYPE, COLOR, Chessboard, MARKER_TYPE} from "../cm-chessboard/src/cm-chessboard/Chessboard.js"
+import {Chess} from "./Chess.js"
 
 $(document).ready(function() {
-    // var config = {
-    //     draggable: true,
-    //     onDrop: send_fen
-    // }
+    let fen = $('#fen').text()
+    const chess = new Chess(fen)
 
     const board = new Chessboard(document.getElementById("board"), {
-        position: $('#fen_pos').text(),
+        position: chess.fen(),
         orientation: $('#current_player_color').text(),
-        sprite: {url: "../static/cm-chessboard/assets/images/chessboard-sprite-staunty.svg"}
+        sprite: {url: "../static/cm-chessboard/assets/images/chessboard-sprite-staunty.svg"},
+        style: {moveFromMarker: undefined, moveToMarker: undefined}, // disable standard markers
     })
+    board.enableMoveInput(inputHandler)
 
-    socket.on('fen_pos', function(fen) {
-        board.position(fen)
-        console.log('Fen position: ' + fen)
-    })
-
-})
-
-const chess = new Chess()
-
-function inputHandler(event) {
-    console.log("event", event)
-    event.chessboard.removeMarkers(undefined, MARKER_TYPE.dot)
-    event.chessboard.removeMarkers(undefined, MARKER_TYPE.square)
-    if (event.type === INPUT_EVENT_TYPE.moveStart) {
-        const moves = chess.moves({square: event.square, verbose: true});
-        event.chessboard.addMarker(event.square, MARKER_TYPE.square)
-        for (const move of moves) {
-            event.chessboard.addMarker(move.to, MARKER_TYPE.dot)
-        }
-        return moves.length > 0
-    } else if (event.type === INPUT_EVENT_TYPE.moveDone) {
-        const move = {from: event.squareFrom, to: event.squareTo}
-        const result = chess.move(move)
-        if (result) {
-            event.chessboard.removeMarkers(undefined, MARKER_TYPE.square)
-            event.chessboard.disableMoveInput()
-            event.chessboard.setPosition(chess.fen())
-            const possibleMoves = chess.moves({verbose: true})
-            if (possibleMoves.length > 0) {
-                const randomIndex = Math.floor(Math.random() * possibleMoves.length)
-                const randomMove = possibleMoves[randomIndex]
-                setTimeout(() => { // smoother with 500ms delay
-                    chess.move({from: randomMove.from, to: randomMove.to})
-                    event.chessboard.enableMoveInput(inputHandler, COLOR.white)
-                    event.chessboard.setPosition(chess.fen())
-                }, 500)
+    function inputHandler(event) {
+        console.log("event", event)
+        event.chessboard.removeMarkers(undefined, MARKER_TYPE.dot)
+        event.chessboard.removeMarkers(undefined, MARKER_TYPE.square)
+        if (event.type === INPUT_EVENT_TYPE.moveStart) {
+            const moves = chess.moves({square: event.square, verbose: true});
+            console.log(moves)
+            event.chessboard.addMarker(event.square, MARKER_TYPE.square)
+            for (const move of moves) {
+                event.chessboard.addMarker(move.to, MARKER_TYPE.dot)
             }
-        } else {
-            console.warn("invalid move", move)
+            return moves.length > 0
+        } else if (event.type === INPUT_EVENT_TYPE.moveDone) {
+            console.log(event)
+            let promotion = ""
+            const move = {from: event.squareFrom, to: event.squareTo, promotion: promotion}
+            console.log(move)
+            const result = chess.move(move)
+            if (result) {
+                send_fen(chess.fen(), promotion)
+                event.chessboard.removeMarkers(undefined, MARKER_TYPE.square)
+            } else {
+                console.warn("invalid move", move)
+            }
+            return result
         }
-        return result
     }
-}
 
-const board = new Chessboard(document.getElementById("board"), {
-    position: chess.fen(),
-    sprite: {url: "../assets/images/chessboard-sprite-staunty.svg"},
-    style: {moveFromMarker: undefined, moveToMarker: undefined}, // disable standard markers
-    orientation: COLOR.white
+    function send_fen(fen, promotion) {
+        let fen_pos = fen.split(' ')[0]
+        socket.emit('fen_pos', fen_pos, promotion)
+    }
+
+    socket.on("fen", function(data) {
+        let move_status = data["status"]
+        let fen = data["fen"]
+        chess = Chess(fen)
+        board.setPosition(fen)
+        console.log("Status: ", move_status)
+        console.log("Fen: ", fen)
+    })
 })
-board.enableMoveInput(inputHandler, COLOR.white)

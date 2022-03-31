@@ -1,7 +1,7 @@
 from abc import ABC
 
 from chess.square import Square
-from chess.excepitons import ColorError
+from chess.exceptions import ColorError
 
 
 class Piece(ABC):
@@ -16,7 +16,7 @@ class Piece(ABC):
     def valid_move(self, source: Square, target: Square, pos: list, castling: str, en_passand_target: str):
         pass
 
-    def moved_throught_piece(self, source: Square, target: Square, pos: list):
+    def moved_through_piece(self, source: Square, target: Square, pos: list):
         pass
 
     def available_squares(self, pos: list):
@@ -50,7 +50,7 @@ class King(Piece):
         else:
             return False
 
-    def moved_throught_piece(self, source: Square, target: Square, pos: list):
+    def moved_through_piece(self, source: Square, target: Square, pos: list):
         return False
 
     def check(self, target: Square, pos: list):
@@ -270,7 +270,7 @@ class Queen(Piece):
             return True
         return False
 
-    def moved_throught_piece(self, source: Square, target: Square, pos: list):
+    def moved_through_piece(self, source: Square, target: Square, pos: list):
         left_sq, right_sq = min(source.j, target.j), max(source.j, target.j)
         upper_sq, lower_sq = min(source.i, target.i), max(source.i, target.i)
 
@@ -313,7 +313,7 @@ class Rook(Piece):
             return True
         return False
 
-    def moved_throught_piece(self, source: Square, target: Square, pos: list):
+    def moved_through_piece(self, source: Square, target: Square, pos: list):
         for j in range(min(source.j, target.j) + 1, max(source.j, target.j)):
             if pos[source.i][j] is not None:
                 return True
@@ -336,7 +336,7 @@ class Bishop(Piece):
             return True
         return False
 
-    def moved_throught_piece(self, source: Square, target: Square, pos: list):
+    def moved_through_piece(self, source: Square, target: Square, pos: list):
         left_sq, right_sq = min(source.j, target.j), max(source.j, target.j)
         if source.i > target.i and source.j < target.j or source.i < target.i and source.j > target.j:
             for j in range(left_sq + 1, right_sq):
@@ -364,7 +364,7 @@ class Knight(Piece):
             return True
         return False
 
-    def moved_throught_piece(self, source: Square, target: Square, pos: list):
+    def moved_through_piece(self, source: Square, target: Square, pos: list):
         return False
 
 
@@ -401,7 +401,7 @@ class Pond(Piece):
 
             return True
 
-    def moved_throught_piece(self, source: Square, target: Square, pos: list):
+    def moved_through_piece(self, source: Square, target: Square, pos: list):
         if abs(source.i - target.i) == 2 and pos[(source.i + target.i) // 2][source.j] is not None:
             return True
 
@@ -431,6 +431,7 @@ def letter_to_piece(letter: str):
 
 
 def generate_available_squares(pos: list, piece: Piece):
+    """Only considers moves that can take a piece"""
     squares = []
 
     if isinstance(piece, Rook) or isinstance(piece, Queen):
@@ -607,6 +608,7 @@ def knight_squares(pos: list, piece: Knight):
 
 # TODO: add en passand squares
 def pond_squares(pos: list, piece: Pond):
+    """does not include squares in front of pond"""
     squares = []
 
     if piece.color == 'w':

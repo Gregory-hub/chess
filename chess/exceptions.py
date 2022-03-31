@@ -15,3 +15,8 @@ class KingInitializingException(ValueError):
     def __init__(self):
         self.message = "Invalid king initialization"
         super().__init__(self.message)
+
+
+class InvalidMoveException(ValueError):
+    def __init__(self):
+        self.message = "Invalid move"

@@ -7,8 +7,9 @@ from flask_login import current_user
 from chess import db, socketio
 from chess.auth import get_user_from_username_or_email
 from chess.models import Game, Player
-from chess.pieces import letter_to_piece, get_pieces, Piece, King, Pond, Knight, Rook, Bishop, Queen
-from chess.square import Square
+from chess.pieces import get_pieces, Piece, King, Pond, Knight, Rook, Bishop, Queen
+from chess.square import Square, squarename_to_square
+from chess.notations import fen_pos_to_pos, pos_to_fen_pos, move_to_an
 
 
 # game creation
@@ -36,7 +37,7 @@ def get_game_conf(game_id: int):
         'supplement': game.supplement,
         'current_player': game.players[0] if game.players[0].user == current_user else game.players[1],
         'opponent': game.players[0] if game.players[0].user != current_user else game.players[1],
-        'fen_pos': game.get_fen_pos()
+        'fen': game.fen
     } if game else None
     return game_conf
 
@@ -69,8 +70,8 @@ def get_my_games():
 def move(game_id: int, new_fen_pos: str, promoting_piece: str):
     game = Game.query.get(game_id)
     old_fen_pos = game.get_fen_pos()
-    old_pos = get_pos(old_fen_pos)
-    new_pos = get_pos(new_fen_pos)
+    old_pos = fen_pos_to_pos(old_fen_pos)
+    new_pos = fen_pos_to_pos(new_fen_pos)
     for i in range(8):
         for j in range(8):
             print(old_pos[i][j].letter if old_pos[i][j] is not None else '*', end=' ')
@@ -79,12 +80,11 @@ def move(game_id: int, new_fen_pos: str, promoting_piece: str):
             print(new_pos[i][j].letter if new_pos[i][j] is not None else '*', end=' ')
         print()
 
+    success = False
     if fen_pos_is_valid(new_fen_pos) and move_is_legal(game, old_pos, new_pos):
 
-        piece, source, target = get_move_info(old_pos, new_pos, game)
+        piece, source, target, tries_to_castle = get_move_info(old_pos, new_pos, game)
         castling_str = get_castling_str(source, target, new_pos, game)
-        if castles(old_pos, new_pos, game):
-            new_fen_pos = get_castle_fen_pos(target, new_fen_pos)
 
         en_passand_target = game.get_enpassand_target()
         if en_passand(source, target, piece, en_passand_target):
@@ -94,9 +94,9 @@ def move(game_id: int, new_fen_pos: str, promoting_piece: str):
         game.add_move(piece.letter, source.name, target.name)
         game.update_fen(new_fen_pos, castling_str, new_en_passand_target)
 
-        socketio.emit('fen_pos', new_fen_pos)
-    else:
-        socketio.emit('fen_pos', old_fen_pos)
+        success = True
+
+    socketio.emit("fen", {"fen": game.fen, "status": ("OK" if success else "NOT OK")})
 
 
 def fen_pos_is_valid(fen_pos: str):
@@ -118,10 +118,15 @@ def move_is_legal(game: Game, old_pos: list, new_pos: list):
     # halfmove_clock = game.get_halfmove_clock()
     # moves_number = game.get_fullmove_number()
 
-    if moves_count(old_pos, new_pos) != 1:
+    number_of_moves = moves_count(old_pos, new_pos)
+    if not 1 <= number_of_moves <= 2:
+        print("Invalid number of moves:", number_of_moves)
+        return False
+    if number_of_moves == 2 and get_castle_code(old_pos, new_pos, game) is None and not move_is_en_passand(old_pos, new_pos, en_passand_target):
+        print("Invalid number of moves: 2(move is not castles and not en passand)")
         return False
 
-    piece, source, target = get_move_info(old_pos, new_pos, game)
+    piece, source, target, tries_to_castle = get_move_info(old_pos, new_pos, game)
     kings = find_kings(new_pos)
     check = False
     checkmate = False
@@ -137,6 +142,7 @@ def move_is_legal(game: Game, old_pos: list, new_pos: list):
             current_players_king = king
 
     if source and target and piece:
+        print('Move:', move_to_an(source, target, old_pos, new_pos))
         print('Piece:', piece)
         print('Piece letter:', piece.letter)
         print('Source:', source.name)
@@ -154,11 +160,11 @@ def move_is_legal(game: Game, old_pos: list, new_pos: list):
     if not piece.valid_move(source, target, old_pos, castling, en_passand_target):
         print("Invalid move")
         return False
-    if piece.moved_throught_piece(source, target, old_pos):
+    if piece.moved_through_piece(source, target, old_pos):
         print("Moved throught piece")
         return False
     if takes_their_own_piece(target, old_pos, new_pos):
-        print("Takes wrong piece")
+        print("Takes same colored piece")
         return False
     if takes_king(target, old_pos, new_pos):
         print("Takes king")
@@ -176,42 +182,6 @@ def move_is_legal(game: Game, old_pos: list, new_pos: list):
     return True
 
 
-def get_pos(fen_pos: str):
-    pos_matrix = [[] for i in range(8)]
-    for i in range(8):
-        row = fen_pos.split('/')[i]
-        j = 0
-        for sq in row:
-            if sq.isdigit():
-                pos_matrix[i].extend([None for j in range(int(sq))])
-                j += int(sq)
-            else:
-                piece = letter_to_piece(sq)
-                piece.square = Square(i, j)
-                pos_matrix[i].append(piece)
-                j += 1
-    return pos_matrix
-
-
-def pos_to_fen_pos(pos: list):
-    fen_pos = ''
-    for i in range(8):
-        j = 0
-        while j < 8:
-            empty_count = 0
-            while j < 8 and pos[i][j] is None:
-                empty_count += 1
-                j += 1
-            if empty_count != 0:
-                fen_pos += str(empty_count)
-            if j < 8:
-                fen_pos += pos[i][j].letter
-                j += 1
-        if i != 7:
-            fen_pos += '/'
-    return fen_pos
-
-
 def moves_count(old_pos: list, new_pos: list):
     changes_count = 0
     for i in range(8):
@@ -223,6 +193,21 @@ def moves_count(old_pos: list, new_pos: list):
 
 def get_move_info(old_pos: list, new_pos: list, game: Game):
     piece, source, target = None, None, None
+    castle_code = get_castle_code(old_pos, new_pos, game)
+    if castle_code is not None:
+        source, target = Square(-1, -1), Square(-1, -1)
+        source.set_j(4)
+        if castle_code[0] == 'b':
+            source.set_i(0), target.set_i(0)
+        else:
+            source.set_i(7), target.set_i(7)
+        if castle_code[1] == 'l':
+            target.set_j(2)
+        else:
+            target.set_j(6)
+        piece = King(castle_code[0], sq=source)
+        return piece, source, target, True
+
     for i in range(8):
         for j in range(8):
             if old_pos[i][j] is not None and new_pos[i][j] is None:
@@ -230,7 +215,7 @@ def get_move_info(old_pos: list, new_pos: list, game: Game):
                 source = Square(i, j)
             elif old_pos[i][j] != new_pos[i][j]:
                 target = Square(i, j)
-    return piece, source, target
+    return piece, source, target, False
 
 
 def takes_their_own_piece(target: Square, old_pos: list, new_pos: list):
@@ -310,31 +295,38 @@ def count_pieces(pieces: list, piece_type: Piece):
     return piece_count
 
 
-def castles(old_pos: list, new_pos: list, game: Game):
-    piece, source, target = get_move_info(old_pos, new_pos, game)
-    castling = game.get_castling_availability()
-    if isinstance(piece, King) and piece.castles(source, target, old_pos, castling):
-        return True
-    return False
+def get_castle_code(old_pos: list, new_pos: list, game: Game):
+    b_king_gone = isinstance(old_pos[0][4], King) and not isinstance(new_pos[0][4], King)
+    b_king_moved_l = b_king_gone and isinstance(new_pos[0][2], King)
+    b_rook_gone_l = isinstance(old_pos[0][0], Rook) and not isinstance(new_pos[0][0], Rook)
+    b_rook_moved_l = b_rook_gone_l and isinstance(new_pos[0][3], Rook)
 
+    if b_king_moved_l and b_rook_moved_l:
+        return "bl"
 
-def get_castle_fen_pos(target: Square, fen_pos: str):
-    pos = get_pos(fen_pos)
-    if pos[target.i][target.j].castles_long(target):
-        king = pos[target.i][target.j]
-        pos[target.i][target.j] = None
-        pos[target.i][2] = king
-        pos[target.i][3] = pos[target.i][0]
-        pos[target.i][0] = None
-    elif pos[target.i][target.j].castles_short(target):
-        king = pos[target.i][target.j]
-        pos[target.i][target.j] = None
-        pos[target.i][6] = king
-        pos[target.i][5] = pos[target.i][7]
-        pos[target.i][7] = None
-    else:
-        raise ValueError("Castles neither short nor long")
-    return pos_to_fen_pos(pos)
+    b_king_moved_r = b_king_gone and isinstance(new_pos[0][6], King)
+    b_rook_gone_r = isinstance(old_pos[0][7], Rook) and not isinstance(new_pos[0][7], Rook)
+    b_rook_moved_r = b_rook_gone_r and isinstance(new_pos[0][5], Rook)
+
+    if b_king_moved_r and b_rook_moved_r:
+        return "br"
+
+    w_king_gone = isinstance(old_pos[7][4], King) and not isinstance(new_pos[7][4], King)
+    w_king_moved_l = w_king_gone and isinstance(new_pos[7][2], King)
+    w_rook_gone_l = isinstance(old_pos[7][0], Rook) and not isinstance(new_pos[7][0], Rook)
+    w_rook_moved_l = w_rook_gone_l and isinstance(new_pos[7][3], Rook)
+
+    if w_king_moved_l and w_rook_moved_l:
+        return "wl"
+
+    w_king_moved_r = w_king_gone and isinstance(new_pos[7][6], King)
+    w_rook_gone_r = isinstance(old_pos[7][7], Rook) and not isinstance(new_pos[7][7], Rook)
+    w_rook_moved_r = w_rook_gone_r and isinstance(new_pos[7][5], Rook)
+
+    if w_king_moved_r and w_rook_moved_r:
+        return "wr"
+
+    return None
 
 
 def get_castling_str(source: Square, target: Square, pos: list, game: Game):
@@ -371,15 +363,57 @@ def get_castling_str(source: Square, target: Square, pos: list, game: Game):
     return castling_str
 
 
+def move_is_en_passand(old_pos: list, new_pos: list, en_passand_target: str):
+    if en_passand_target == '-':
+        print("False 1")
+        return False
+    sq = squarename_to_square(en_passand_target)
+    if old_pos[sq.i][sq.j] is not None or not isinstance(new_pos[sq.i][sq.j], Pond):
+        print("False 2")
+        print(old_pos[sq.i][sq.j])
+        print(new_pos[sq.i][sq.j])
+        print(sq.i, sq.j)
+        for i in range(8):
+            for j in range(8):
+                print(old_pos[i][j].letter if old_pos[i][j] is not None else '*', end=' ')
+            print(end=' ' * 2)
+            for j in range(8):
+                print(new_pos[i][j].letter if new_pos[i][j] is not None else '*', end=' ')
+            print()
+        return False
+    if sq.i == 2:
+        if not (old_pos[3][sq.j].color == 'b' and new_pos[sq.i][sq.j].color == 'w'):
+            print("False 3")
+            return False
+        if new_pos[3][sq.j]:
+            print("False 4")
+            return False
+        if sq.j > 0 and isinstance(old_pos[3][sq.j - 1], Pond) and new_pos[3][sq.j - 1] is None and old_pos[3][sq.j - 1].color != old_pos[3][sq.j].color:
+            return True
+        if sq.j < 7 and isinstance(old_pos[3][sq.j + 1], Pond) and new_pos[3][sq.j + 1] is None and old_pos[3][sq.j + 1].color != old_pos[3][sq.j].color:
+            return True
+    elif sq.i == 5:
+        if not (old_pos[4][sq.j].color == 'w' and new_pos[sq.i][sq.j] == 'b'):
+            print("False 5")
+            return False
+        if new_pos[4][sq.j]:
+            print("False 6")
+            return False
+        if sq.j > 0 and isinstance(old_pos[4][sq.j - 1], Pond) and new_pos[4][sq.j - 1] is None and old_pos[4][sq.j - 1].color != old_pos[4][sq.j].color:
+            return True
+        if sq.j < 7 and isinstance(old_pos[4][sq.j + 1], Pond) and new_pos[4][sq.j + 1] is None and old_pos[4][sq.j + 1].color != old_pos[4][sq.j].color:
+            return True
+
+    print("False 5")
+    return False
+
+
 def en_passand(source: Square, target: Square, piece: Piece, en_passand_target: str):
     if en_passand_target == '-':
-        print("fasle 1")
         return False
     if not isinstance(piece, Pond):
-        print("fasle 2")
         return False
     if target.name != en_passand_target:
-        print("fasle 3")
         return False
     if source.i == 3 and target.i == 2 and piece.color == 'w' and abs(target.j - source.j == 1):
         return True
@@ -389,7 +423,7 @@ def en_passand(source: Square, target: Square, piece: Piece, en_passand_target: 
 
 
 def get_en_passand_fen_pos(target: Square, fen_pos: str):
-    pos = get_pos(fen_pos)
+    pos = fen_pos_to_pos(fen_pos)
     piece = pos[target.i][target.j]
     if piece.color == 'w' and target.i == 2:
         pos[3][target.j] = None

@@ -208,6 +208,22 @@ def get_move_info(old_pos: list, new_pos: list, game: Game):
         piece = King(castle_code[0], sq=source)
         return piece, source, target, True
 
+    en_passand_sq = squarename_to_square(game.get_enpassand_target())
+    if move_is_en_passand(old_pos, new_pos, game.get_enpassand_target()):
+        piece = new_pos[en_passand_sq.i][en_passand_sq.j]
+        target = en_passand_sq
+
+        if piece.color == 'w' and en_passand_sq.j > 0 and old_pos[3][en_passand_sq.j - 1] and not new_pos[3][en_passand_sq.j - 1]:
+            source = old_pos[3][en_passand_sq.j - 1].square
+        if piece.color == 'w' and en_passand_sq.j < 7 and old_pos[3][en_passand_sq.j + 1] and not new_pos[3][en_passand_sq.j + 1]:
+            source = old_pos[3][en_passand_sq.j + 1].square
+        if piece.color == 'b' and en_passand_sq.j > 0 and old_pos[4][en_passand_sq.j - 1] and not new_pos[4][en_passand_sq.j - 1]:
+            source = old_pos[4][en_passand_sq.j - 1].square
+        if piece.color == 'b' and en_passand_sq.j < 7 and old_pos[4][en_passand_sq.j + 1] and not new_pos[4][en_passand_sq.j + 1]:
+            source = old_pos[4][en_passand_sq.j + 1].square
+
+        return piece, source, target, False
+
     for i in range(8):
         for j in range(8):
             if old_pos[i][j] is not None and new_pos[i][j] is None:
@@ -215,6 +231,7 @@ def get_move_info(old_pos: list, new_pos: list, game: Game):
                 source = Square(i, j)
             elif old_pos[i][j] != new_pos[i][j]:
                 target = Square(i, j)
+
     return piece, source, target, False
 
 
@@ -365,46 +382,29 @@ def get_castling_str(source: Square, target: Square, pos: list, game: Game):
 
 def move_is_en_passand(old_pos: list, new_pos: list, en_passand_target: str):
     if en_passand_target == '-':
-        print("False 1")
         return False
     sq = squarename_to_square(en_passand_target)
     if old_pos[sq.i][sq.j] is not None or not isinstance(new_pos[sq.i][sq.j], Pawn):
-        print("False 2")
-        print(old_pos[sq.i][sq.j])
-        print(new_pos[sq.i][sq.j])
-        print(sq.i, sq.j)
-        for i in range(8):
-            for j in range(8):
-                print(old_pos[i][j].letter if old_pos[i][j] is not None else '*', end=' ')
-            print(end=' ' * 2)
-            for j in range(8):
-                print(new_pos[i][j].letter if new_pos[i][j] is not None else '*', end=' ')
-            print()
         return False
     if sq.i == 2:
         if not (old_pos[3][sq.j].color == 'b' and new_pos[sq.i][sq.j].color == 'w'):
-            print("False 3")
             return False
         if new_pos[3][sq.j]:
-            print("False 4")
             return False
         if sq.j > 0 and isinstance(old_pos[3][sq.j - 1], Pawn) and new_pos[3][sq.j - 1] is None and old_pos[3][sq.j - 1].color != old_pos[3][sq.j].color:
             return True
         if sq.j < 7 and isinstance(old_pos[3][sq.j + 1], Pawn) and new_pos[3][sq.j + 1] is None and old_pos[3][sq.j + 1].color != old_pos[3][sq.j].color:
             return True
     elif sq.i == 5:
-        if not (old_pos[4][sq.j].color == 'w' and new_pos[sq.i][sq.j] == 'b'):
-            print("False 5")
+        if not (old_pos[4][sq.j].color == 'w' and new_pos[sq.i][sq.j].color == 'b'):
             return False
         if new_pos[4][sq.j]:
-            print("False 6")
             return False
         if sq.j > 0 and isinstance(old_pos[4][sq.j - 1], Pawn) and new_pos[4][sq.j - 1] is None and old_pos[4][sq.j - 1].color != old_pos[4][sq.j].color:
             return True
         if sq.j < 7 and isinstance(old_pos[4][sq.j + 1], Pawn) and new_pos[4][sq.j + 1] is None and old_pos[4][sq.j + 1].color != old_pos[4][sq.j].color:
             return True
 
-    print("False 5")
     return False
 
 

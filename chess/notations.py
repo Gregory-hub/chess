@@ -43,7 +43,7 @@ def pos_to_fen_pos(pos: list):
 
 def move_to_an(source: Square, target: Square, old_pos: list, new_pos: list, promotion: str):
     """Returns move in algebraic notation format. Assuming move is valid"""
-    piece = new_pos[target.i][target.j]
+    piece = copy.deepcopy(new_pos[target.i][target.j])
     init_square_name = ''
     final_square_name = target.name
     take_sign = ''

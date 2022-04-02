@@ -6,7 +6,7 @@ import {Chess} from "./Chess.js"
 
 $(document).ready(function() {
     let fen = $('#fen').text()
-    const chess = new Chess(fen)
+    let chess = new Chess(fen)
 
     const board = new Chessboard(document.getElementById("board"), {
         position: chess.fen(),

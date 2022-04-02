@@ -1,6 +1,6 @@
 import copy
 
-from chess.pieces import letter_to_piece, generate_available_squares, Pond, King
+from chess.pieces import letter_to_piece, generate_available_squares, Pawn, King
 from chess.square import Square
 from chess.exceptions import InvalidMoveException
 
@@ -41,7 +41,7 @@ def pos_to_fen_pos(pos: list):
     return fen_pos
 
 
-def move_to_an(source: Square, target: Square, old_pos: list, new_pos: list):
+def move_to_an(source: Square, target: Square, old_pos: list, new_pos: list, promotion: str):
     """Returns move in algebraic notation format. Assuming move is valid"""
     piece = new_pos[target.i][target.j]
     init_square_name = ''
@@ -65,32 +65,35 @@ def move_to_an(source: Square, target: Square, old_pos: list, new_pos: list):
         if piece.color == 'b' and target.j == 6:
             return 'O-O'
 
-    if piece.color == 'w' and isinstance(piece, Pond):
+    if piece.color == 'w' and isinstance(piece, Pawn):
         piece_behind = old_pos[target.i + 1][target.j]
-    elif piece.color == 'b' and isinstance(piece, Pond):
+    elif piece.color == 'b' and isinstance(piece, Pawn):
         piece_behind = old_pos[target.i - 1][target.j]
     else:
         piece_behind = None
 
-    if abs(target.j - source.j) == 1 and isinstance(piece_behind, Pond) and piece_behind.color != piece.color:
+    if abs(target.j - source.j) == 1 and isinstance(piece_behind, Pawn) and piece_behind.color != piece.color:
         take_sign = 'x'
 
     if old_pos[target.i][target.j]:
         if old_pos[target.i][target.j].color == piece.color:
             raise InvalidMoveException
         take_sign = 'x'
-        if isinstance(piece, Pond):
+        if isinstance(piece, Pawn):
             init_square_name = source.name[0]
 
     temp_piece = copy.deepcopy(piece)
     temp_piece.color = 'w' if piece.color == 'b' else 'b'
     squares = generate_available_squares(new_pos, temp_piece)
     for sq in squares:
-        if isinstance(old_pos[sq.i][sq.j], type(piece)) and sq != source and not isinstance(piece, Pond):
+        if isinstance(old_pos[sq.i][sq.j], type(piece)) and sq != source and not isinstance(piece, Pawn):
             if sq.j == source.j and not piece.moved_through_piece(sq, target, old_pos):
                 init_square_name += source.name[0]
             if sq.i == source.i and not piece.moved_through_piece(sq, target, old_pos):
                 init_square_name += source.name[1]
+
+    if promotion != '' and isinstance(piece, Pawn):
+        end = '+=' + promotion
 
     for i in range(8):
         for j in range(8):
@@ -100,7 +103,5 @@ def move_to_an(source: Square, target: Square, old_pos: list, new_pos: list):
                     end = '+'
                 if new_pos[sq.i][sq.j].checkmate(sq, new_pos):
                     end = '#'
-
-    # promoting, draw
 
     return piece_letter + init_square_name + take_sign + final_square_name + end

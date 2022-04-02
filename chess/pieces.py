@@ -368,7 +368,7 @@ class Knight(Piece):
         return False
 
 
-class Pond(Piece):
+class Pawn(Piece):
     letter = 'p'
 
     def valid_move(self, source: Square, target: Square, pos: list, castling: str, en_passand_target: str):
@@ -425,7 +425,7 @@ def letter_to_piece(letter: str):
     elif letter.upper() == 'N':
         return Knight(color=color)
     elif letter.upper() == 'P':
-        return Pond(color=color)
+        return Pawn(color=color)
     else:
         return None
 
@@ -440,8 +440,8 @@ def generate_available_squares(pos: list, piece: Piece):
         squares.extend(bishop_squares(pos, piece))
     if isinstance(piece, Knight):
         squares.extend(knight_squares(pos, piece))
-    if isinstance(piece, Pond):
-        squares.extend(pond_squares(pos, piece))
+    if isinstance(piece, Pawn):
+        squares.extend(Pawn_squares(pos, piece))
     if isinstance(piece, King):
         squares.extend(king_squares(pos, piece))
 
@@ -607,8 +607,8 @@ def knight_squares(pos: list, piece: Knight):
 
 
 # TODO: add en passand squares
-def pond_squares(pos: list, piece: Pond):
-    """does not include squares in front of pond"""
+def Pawn_squares(pos: list, piece: Pawn):
+    """does not include squares in front of Pawn"""
     squares = []
 
     if piece.color == 'w':

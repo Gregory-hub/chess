@@ -7,7 +7,7 @@ from flask_login import current_user
 from chess import db, socketio
 from chess.auth import get_user_from_username_or_email
 from chess.models import Game, Player
-from chess.pieces import get_pieces, Piece, King, Pond, Knight, Rook, Bishop, Queen
+from chess.pieces import get_pieces, Piece, King, Pawn, Knight, Rook, Bishop, Queen
 from chess.square import Square, squarename_to_square
 from chess.notations import fen_pos_to_pos, pos_to_fen_pos, move_to_an
 
@@ -67,7 +67,7 @@ def get_my_games():
 
 
 # move processing
-def move(game_id: int, new_fen_pos: str, promoting_piece: str):
+def move(game_id: int, new_fen_pos: str, promotion: str):
     game = Game.query.get(game_id)
     old_fen_pos = game.get_fen_pos()
     old_pos = fen_pos_to_pos(old_fen_pos)
@@ -81,7 +81,7 @@ def move(game_id: int, new_fen_pos: str, promoting_piece: str):
         print()
 
     success = False
-    if fen_pos_is_valid(new_fen_pos) and move_is_legal(game, old_pos, new_pos):
+    if fen_pos_is_valid(new_fen_pos) and move_is_legal(game, old_pos, new_pos, promotion):
 
         piece, source, target, tries_to_castle = get_move_info(old_pos, new_pos, game)
         castling_str = get_castling_str(source, target, new_pos, game)
@@ -112,7 +112,7 @@ def fen_pos_is_valid(fen_pos: str):
     return True
 
 
-def move_is_legal(game: Game, old_pos: list, new_pos: list):
+def move_is_legal(game: Game, old_pos: list, new_pos: list, promotion: str):
     castling = game.get_castling_availability()
     en_passand_target = game.get_enpassand_target()
     # halfmove_clock = game.get_halfmove_clock()
@@ -142,7 +142,7 @@ def move_is_legal(game: Game, old_pos: list, new_pos: list):
             current_players_king = king
 
     if source and target and piece:
-        print('Move:', move_to_an(source, target, old_pos, new_pos))
+        print('Move:', move_to_an(source, target, old_pos, new_pos, promotion))
         print('Piece:', piece)
         print('Piece letter:', piece.letter)
         print('Source:', source.name)
@@ -172,11 +172,11 @@ def move_is_legal(game: Game, old_pos: list, new_pos: list):
     if current_players_king.check(current_players_king.square, new_pos):
         print("Cannot move this because it's check")
         return False
-    if isinstance(piece, Pond) and not pond_takes_in_valid_way(source, target, old_pos, en_passand_target):
-        print("Pond tries to take piece in front")
+    if isinstance(piece, Pawn) and not pawn_takes_in_valid_way(source, target, old_pos, en_passand_target):
+        print("Pawn tries to take piece in front")
         return False
-    if isinstance(piece, Pond) and not valid_diagonal_pond_move(source, target, old_pos, en_passand_target):
-        print("Pond steps on empty square diagonally")
+    if isinstance(piece, Pawn) and not valid_diagonal_pawn_move(source, target, old_pos, en_passand_target):
+        print("Pawn steps on empty square diagonally")
         return False
 
     return True
@@ -238,7 +238,7 @@ def find_kings(pos: list):
     return kings
 
 
-def pond_takes_in_valid_way(source: Square, target: Square, old_pos: list, en_passand_target: str):
+def pawn_takes_in_valid_way(source: Square, target: Square, old_pos: list, en_passand_target: str):
     if old_pos[source.i][source.j].color == 'w':
         if source.i == 3 and target.i == 2 and abs(source.j - target.j) == 1 and target.name == en_passand_target:
             return True
@@ -250,7 +250,7 @@ def pond_takes_in_valid_way(source: Square, target: Square, old_pos: list, en_pa
     return True
 
 
-def valid_diagonal_pond_move(source: Square, target: Square, old_pos: list, en_passand_target: str):
+def valid_diagonal_pawn_move(source: Square, target: Square, old_pos: list, en_passand_target: str):
     if abs(source.j - target.j) == 1 and old_pos[target.i][target.j] is None and target.name != en_passand_target:
         return False
     return True
@@ -271,7 +271,7 @@ def insufficient_material_for_color(pieces: list, opponents_pieces: str, color: 
     bishops_count = count_pieces(pieces, Bishop)
     enough_to_mate_pieces_count = count_pieces(pieces, Queen)
     enough_to_mate_pieces_count += count_pieces(pieces, Rook)
-    enough_to_mate_pieces_count += count_pieces(pieces, Pond)
+    enough_to_mate_pieces_count += count_pieces(pieces, Pawn)
 
     if len(pieces) == 1:
         return True
@@ -368,7 +368,7 @@ def move_is_en_passand(old_pos: list, new_pos: list, en_passand_target: str):
         print("False 1")
         return False
     sq = squarename_to_square(en_passand_target)
-    if old_pos[sq.i][sq.j] is not None or not isinstance(new_pos[sq.i][sq.j], Pond):
+    if old_pos[sq.i][sq.j] is not None or not isinstance(new_pos[sq.i][sq.j], Pawn):
         print("False 2")
         print(old_pos[sq.i][sq.j])
         print(new_pos[sq.i][sq.j])
@@ -388,9 +388,9 @@ def move_is_en_passand(old_pos: list, new_pos: list, en_passand_target: str):
         if new_pos[3][sq.j]:
             print("False 4")
             return False
-        if sq.j > 0 and isinstance(old_pos[3][sq.j - 1], Pond) and new_pos[3][sq.j - 1] is None and old_pos[3][sq.j - 1].color != old_pos[3][sq.j].color:
+        if sq.j > 0 and isinstance(old_pos[3][sq.j - 1], Pawn) and new_pos[3][sq.j - 1] is None and old_pos[3][sq.j - 1].color != old_pos[3][sq.j].color:
             return True
-        if sq.j < 7 and isinstance(old_pos[3][sq.j + 1], Pond) and new_pos[3][sq.j + 1] is None and old_pos[3][sq.j + 1].color != old_pos[3][sq.j].color:
+        if sq.j < 7 and isinstance(old_pos[3][sq.j + 1], Pawn) and new_pos[3][sq.j + 1] is None and old_pos[3][sq.j + 1].color != old_pos[3][sq.j].color:
             return True
     elif sq.i == 5:
         if not (old_pos[4][sq.j].color == 'w' and new_pos[sq.i][sq.j] == 'b'):
@@ -399,9 +399,9 @@ def move_is_en_passand(old_pos: list, new_pos: list, en_passand_target: str):
         if new_pos[4][sq.j]:
             print("False 6")
             return False
-        if sq.j > 0 and isinstance(old_pos[4][sq.j - 1], Pond) and new_pos[4][sq.j - 1] is None and old_pos[4][sq.j - 1].color != old_pos[4][sq.j].color:
+        if sq.j > 0 and isinstance(old_pos[4][sq.j - 1], Pawn) and new_pos[4][sq.j - 1] is None and old_pos[4][sq.j - 1].color != old_pos[4][sq.j].color:
             return True
-        if sq.j < 7 and isinstance(old_pos[4][sq.j + 1], Pond) and new_pos[4][sq.j + 1] is None and old_pos[4][sq.j + 1].color != old_pos[4][sq.j].color:
+        if sq.j < 7 and isinstance(old_pos[4][sq.j + 1], Pawn) and new_pos[4][sq.j + 1] is None and old_pos[4][sq.j + 1].color != old_pos[4][sq.j].color:
             return True
 
     print("False 5")
@@ -411,7 +411,7 @@ def move_is_en_passand(old_pos: list, new_pos: list, en_passand_target: str):
 def en_passand(source: Square, target: Square, piece: Piece, en_passand_target: str):
     if en_passand_target == '-':
         return False
-    if not isinstance(piece, Pond):
+    if not isinstance(piece, Pawn):
         return False
     if target.name != en_passand_target:
         return False
@@ -436,6 +436,6 @@ def get_en_passand_fen_pos(target: Square, fen_pos: str):
 
 def generate_en_passand_target(source: Square, target: Square, piece: Piece):
     en_passand_target = '-'
-    if isinstance(piece, Pond) and abs(source.i - target.i) == 2:
+    if isinstance(piece, Pawn) and abs(source.i - target.i) == 2:
         en_passand_target = Square((target.i + source.i) // 2, target.j).name
     return en_passand_target

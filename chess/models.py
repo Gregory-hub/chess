@@ -12,9 +12,10 @@ def load_user(user_id: int):
 
 class User(db.Model, UserMixin):
     id = db.Column(db.Integer, primary_key=True)
-    username = db.Column(db.String(20), unique=True, nullable=False)
     email = db.Column(db.String(50), unique=True, nullable=False)
-    password = db.Column(db.String(1000), nullable=False)
+    username = db.Column(db.String(20), unique=True)
+    tg_user_id = db.Column(db.Integer, unique=True)
+    password = db.Column(db.String(1000))
     image = db.Column(db.String(200), nullable=False, default='default.jpeg')
 
     players = db.relationship('Player')
@@ -22,8 +23,24 @@ class User(db.Model, UserMixin):
     def get_image_url(self):
         return os.path.join(app.config['UPLOAD_URL'], self.image)
 
+    def set_tg_user_id(self, tg_user_id: int):
+        self.tg_user_id = tg_user_id
+        db.session.commit()
+
+    def set_username(self, username: str):
+        self.username = username
+        db.session.commit()
+
+    def set_password(self, password: str):
+        self.password = password
+        db.session.commit()
+
+    def set_image(self, image: str):
+        self.image = image
+        db.session.commit()
+
     def __repr__(self):
-        return f'User(username={self.username}, email={self.email}, image={self.image})'
+        return f'User(username={self.username}, email={self.email}, tg_user_id={self.tg_user_id}, image={self.image})'
 
 
 class Game(db.Model):
@@ -32,8 +49,9 @@ class Game(db.Model):
     game_length = db.Column(db.Interval, nullable=False)
     supplement = db.Column(db.Interval, nullable=False)
     fen = db.Column(db.String(100), nullable=False, default='rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 0')
-    # pgn = db.Column(db.String(100000), nullable=False, default='')
-    # finished = db.Column(db.Boolean, nullable=False, default=False)
+    pgn = db.Column(db.String, nullable=False, default='')
+    finished = db.Column(db.Boolean, nullable=False, default=False)
+    # telegram_game = db.Column(db.Boolean, nullable=False, default=False)
 
     players = db.relationship('Player', backref='game')
     moves = db.relationship('Move', backref='game')
@@ -78,7 +96,7 @@ class Game(db.Model):
         db.session.commit()
 
     def __repr__(self):
-        return f'Game(players={self.players}, start_time={self.start_time}, game_length={self.game_length}, moves={self.moves}, fen={self.fen})'
+        return f'Game(players={self.players}, start_time={self.start_time}, game_length={self.game_length}, moves={self.moves}, fen={self.fen}, pgn={self.pgn}, finished={self.finished})'
 
 
 class Player(db.Model):
@@ -88,7 +106,7 @@ class Player(db.Model):
     game_id = db.Column(db.ForeignKey('game.id'), nullable=False)
     color = db.Column(db.String(5), nullable=False)
 
-    user = db.relationship('User')
+    user = db.relationship('User', overlaps="players")
 
     def __repr__(self):
         return f'Player(user={self.user.username}, game_id={self.game_id}, color={self.color})'
@@ -102,7 +120,7 @@ class Move(db.Model):
     target = db.Column(db.String(10))
     piece = db.Column(db.String(1))
     castling = db.Column(db.Boolean, nullable=False, default=False)
-    # algebraic = db.Column(db.String(5))
+    algebraic = db.Column(db.String(5))
 
     def __repr__(self):
         return f'Move(game_id={self.game_id}, index={self.index}, piece={self.piece}, source={self.source}, target={self.target})'

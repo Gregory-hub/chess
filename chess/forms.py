@@ -34,11 +34,6 @@ class RegistrationForm(FlaskForm):
         if user or username.data == 'default':
             raise ValidationError('This username is already taken')
 
-    def validate_email(self, email):
-        user = User.query.filter(User.email == email.data).first()
-        if user:
-            raise ValidationError('This email is already taken')
-
 
 class LoginForm(FlaskForm):
     username_or_email = StringField('Username or email', validators=[DataRequired(), Length(min=2)], id='floatingInput', render_kw={'placeholder': 'Username or email'})
@@ -47,7 +42,7 @@ class LoginForm(FlaskForm):
 
     def validate_username_or_email(self, username_or_email):
         user = get_user_from_username_or_email(username_or_email.data)
-        if not user:
+        if not user or not user.username or not user.password:
             raise ValidationError("Invalid username or email")
 
 

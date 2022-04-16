@@ -4,7 +4,7 @@ from datetime import datetime, timezone, timedelta
 
 from flask_login import current_user
 
-from chess import db, socketio
+from chess import db
 from chess.auth import get_user_from_username_or_email
 from chess.models import Game, Player
 from chess.pieces import get_pieces, Piece, King, Pawn, Knight, Rook, Bishop, Queen
@@ -96,7 +96,7 @@ def move(game_id: int, new_fen_pos: str, promotion: str):
 
         success = True
 
-    socketio.emit("fen", {"fen": game.fen, "status": ("OK" if success else "NOT OK")})
+    return success
 
 
 def fen_pos_is_valid(fen_pos: str):

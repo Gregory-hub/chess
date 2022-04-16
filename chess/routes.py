@@ -1,16 +1,17 @@
-from flask import render_template, request, redirect, url_for, flash, send_from_directory
+from flask import render_template, request, redirect, url_for, flash, send_from_directory, jsonify
 from flask_login import current_user, logout_user
 from flask_socketio import emit
 
 from chess import app, socketio, clients
 from chess.forms import RegistrationForm, LoginForm, StartGameForm
 from chess.auth import sign_in, sign_up, login_on_registration, get_current_client, create_client, authentication_required
-from chess.models import User
+from chess.models import User, Game
 from chess.connect import get_matched_users, invite_player
 from chess.game import get_game_conf, create_game, get_my_games, move
+from chess.api import add_tg_user
 
 
-# sockets
+# socket functions
 @socketio.event
 def connect():
     client = create_client()
@@ -45,7 +46,8 @@ def invite(data: dict):
 @authentication_required
 def fen_pos(fen_pos: str, promotion: str):
     game_id = int(request.referrer.split('/')[-1])
-    move(game_id, fen_pos, promotion)
+    success = move(game_id, fen_pos, promotion)
+    socketio.emit("fen", {"fen": Game.query.get(game_id).fen, "status": ("OK" if success else "NOT OK")})
 
 
 # routes
@@ -54,7 +56,7 @@ def index():
     return render_template('index.html')
 
 
-@app.route('/my_games/', methods=['GET'])
+@app.route('/my_games', methods=['GET'])
 @authentication_required
 def my_games():
     my_games = get_my_games()
@@ -72,7 +74,7 @@ def my_games():
     return render_template('my_games.html', games=games)
 
 
-@app.route('/game_config/', methods=['GET', 'POST'])
+@app.route('/game_config', methods=['GET', 'POST'])
 @authentication_required
 def game_config():
     form = StartGameForm()
@@ -114,13 +116,13 @@ def game(id: int):
         return redirect(url_for('game_config'))
 
 
-@app.route('/user/<username>/', methods=['GET'])
-def user(username):
+@app.route('/user/<username>', methods=['GET'])
+def user(username: str):
     user = User.query.filter_by(username=username).first()
     return render_template('user.html', user=user)
 
 
-@app.route('/register/', methods=['GET', 'POST'])
+@app.route('/register', methods=['GET', 'POST'])
 def register():
     if current_user.is_authenticated:
         return redirect(url_for('index'))
@@ -139,7 +141,7 @@ def register():
     return render_template('register.html', form=form)
 
 
-@app.route('/login/', methods=['GET', 'POST'])
+@app.route('/login', methods=['GET', 'POST'])
 def login():
     if current_user.is_authenticated:
         return redirect(url_for('index'))
@@ -154,7 +156,7 @@ def login():
     return render_template('login.html', form=form)
 
 
-@app.route('/logout/', methods=['GET'])
+@app.route('/logout', methods=['GET'])
 def logout():
     logout_user()
     flash("You logged out")
@@ -165,3 +167,15 @@ def logout():
 @app.route('/media/<filename>', methods=['GET'])
 def upload(filename):
     return send_from_directory(app.config['UPLOAD_FOLDER'], filename)
+
+
+# api
+@app.route('/api/register', methods=['POST'])
+def register_tg_user():
+    tg_user_id = request.form.get("user_id", default=None)
+    email = request.form.get("email", default=None)
+    add_tg_user(tg_user_id, email)
+    return jsonify(
+        user_id=tg_user_id,
+        email=email
+    )

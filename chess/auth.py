@@ -5,6 +5,7 @@ import functools
 from flask import request, flash, redirect, url_for
 from flask_login import login_user, current_user
 from werkzeug.datastructures import FileStorage
+from sqlalchemy.exc import IntegrityError
 
 from chess import UPLOAD_FOLDER, hasher, clients, app, logger
 from chess.models import db, User
@@ -94,7 +95,7 @@ def register(email: str, image: str = None, username: str = None, password: str 
         filename = upload_image(image, username)
         user.image = filename
 
-    add_user(user)
+    success = add_user(user)
 
     return success
 
@@ -106,8 +107,14 @@ def login_on_registration(form):
 
 
 def add_user(user: User):
-    db.session.add(user)
-    db.session.commit()
+    try:
+        db.session.add(user)
+        db.session.commit()
+        success = True
+    except IntegrityError:
+        success = False
+
+    return success
 
 
 def get_user_from_username_or_email(username_or_email: str):

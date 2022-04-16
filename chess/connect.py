@@ -1,8 +1,7 @@
-from datetime import date, datetime
 import re
-from flask_socketio import emit, join_room, leave_room
+from flask_socketio import join_room, leave_room
 
-from chess import socketio, logger
+from chess import socketio
 from chess.auth import Client, get_current_client, get_client_by_username
 from chess.models import User
 
@@ -19,7 +18,7 @@ def get_matched_users(query: str):
         return []
     users = User.query.all()
     current_username = get_current_client().username
-    matched_users = [user.username for user in users if re.search(query, user.username) and user.username != current_username]
+    matched_users = [user.username for user in users if user.username and re.search(query, user.username) and user.username != current_username]
     return matched_users
 
 

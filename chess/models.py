@@ -14,8 +14,8 @@ class User(db.Model, UserMixin):
     id = db.Column(db.Integer, primary_key=True)
     email = db.Column(db.String(50), unique=True, nullable=False)
     username = db.Column(db.String(20), unique=True)
-    tg_user_id = db.Column(db.Integer, unique=True)
     password = db.Column(db.String(1000))
+    tg_user_id = db.Column(db.Integer, unique=True)
     image = db.Column(db.String(200), nullable=False, default='default.jpeg')
 
     players = db.relationship('Player')

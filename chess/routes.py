@@ -179,3 +179,17 @@ def register_tg_user():
         status="OK" if success else "FAIL",
         message=message
     )
+
+
+@app.route('/api/start_game', methods=['POST'])
+def start_tg_game():
+    # current_player_user_id = request.form.get("user_id", default=None)
+    # opponents_user_id = request.form.get("opponents_user_id", default=None)
+    # opponents_email = request.form.get("opponents_email", default=None)
+    # opponents_tg_username = request.form.get("opponents_username", default=None)
+    pass
+
+
+@app.route('/api/move/<an_move>', methods=['GET'])
+def api_move(an_move: str):
+    pass

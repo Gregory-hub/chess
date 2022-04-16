@@ -87,8 +87,6 @@ def register(email: str, image: str = None, username: str = None, password: str 
     if username:
         user.username = username
         user.password = hasher.generate_password_hash(password).decode()
-        print(user.username)
-        print(type(user.username))
     else:
         user.tg_user_id = tg_user_id
 

@@ -174,8 +174,8 @@ def upload(filename):
 def register_tg_user():
     tg_user_id = request.form.get("user_id", default=None)
     email = request.form.get("email", default=None)
-    add_tg_user(tg_user_id, email)
+    success, message = add_tg_user(tg_user_id, email)
     return jsonify(
-        user_id=tg_user_id,
-        email=email
+        status="OK" if success else "FAIL",
+        message=message
     )

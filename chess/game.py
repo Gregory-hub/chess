@@ -5,25 +5,60 @@ from datetime import datetime, timezone, timedelta
 from flask_login import current_user
 
 from chess import db
-from chess.auth import get_user_from_username_or_email
-from chess.models import Game, Player
+from chess.models import Game, Player, User
 from chess.pieces import get_pieces, Piece, King, Pawn, Knight, Rook, Bishop, Queen
 from chess.square import Square, squarename_to_square
 from chess.notations import fen_pos_to_pos, pos_to_fen_pos, move_to_an
 
 
 # game creation
-def create_game(length: int, supplement: int, opponent_username: str, current_player_color: str):
+def create_browser_game(length: int, supplement: int, opponent_username: str, current_player_color: str):
     game = Game(
         start_time=datetime.now(timezone.utc),
         game_length=timedelta(seconds=length),
         supplement=timedelta(seconds=supplement),
-        fen='r3k2r/pppppppp/8/8/8/8/PPPPPPPP/R3K2R w KQkq - 0 1'
     )
     if current_player_color == 'random':
         current_player_color = choice(['b', 'w'])
-    game.players = create_players(opponent_username, current_player_color)
+    opponent = User.query.filter(User.username == opponent_username).first()
+    game.players = create_players(opponent, current_user, current_player_color)
 
+    return create_game(game)
+
+
+def create_tg_game(current_player_user_id, current_player_color, opponent_user_id: int = None, opponent_email: str = None):
+    success = None
+    message = None
+    game = Game(
+        start_time=datetime.now(timezone.utc),
+        telegram_game=True
+    )
+    if opponent_user_id:
+        opponent = User.query.filter(User.user_id == opponent_user_id)
+    elif opponent_email:
+        opponent = User.query.filter(User.email == opponent_email)
+    else:
+        success = False
+        message = "Neither opponent's email nor opponent's user_id is provided"
+    current = User.query.filter(User.user_id == current_player_user_id)
+
+    game.players = create_players(opponent, current, current_player_color)
+
+    game = create_game(game)
+
+    if game is None:
+        success = False
+        message = "Game creation failed"
+    elif success is None:
+        success = True
+        message = 'Game creation successful'
+
+    return success, message
+
+
+def create_game(game: Game):
+    if not (game.telegram_game and not game.game_length and not game.supplement or game.game_length and game.supplement):
+        return None
     db.session.add(game)
     db.session.commit()
 
@@ -31,6 +66,7 @@ def create_game(length: int, supplement: int, opponent_username: str, current_pl
 
 
 def get_game_conf(game_id: int):
+    # for browser
     game = Game.query.get(game_id)
     game_conf = {
         'game_length': game.game_length,
@@ -38,24 +74,23 @@ def get_game_conf(game_id: int):
         'current_player': game.players[0] if game.players[0].user == current_user else game.players[1],
         'opponent': game.players[0] if game.players[0].user != current_user else game.players[1],
         'fen': game.fen
-    } if game else None
+    } if game and not game.telegram_game else None
     return game_conf
 
 
-def create_players(opponent_username: str, current_player_color: str):
+def create_players(opponent: User, current: User, current_player_color: str):
     player1 = Player(
         color=current_player_color,
     )
-    player1.user = current_user
+    player1.user = current
 
     colors = ['b', 'w']
     colors.remove(current_player_color)
     player2_color = colors[0]
-
     player2 = Player(
         color=player2_color,
     )
-    player2.user = get_user_from_username_or_email(opponent_username)
+    player2.user = opponent
 
     return [player1, player2]
 
@@ -128,18 +163,24 @@ def move_is_legal(game: Game, old_pos: list, new_pos: list, promotion: str):
 
     piece, source, target, tries_to_castle = get_move_info(old_pos, new_pos, game)
     kings = find_kings(new_pos)
-    check = False
-    checkmate = False
-    stalemate = False
+    check = ''
+    checkmate = ''
+    stalemate = ''
     for king in kings:
         if king.check(king.square, new_pos):
-            check = True
+            check += king.color
         if king.checkmate(king.square, new_pos):
-            checkmate = True
+            checkmate += king.color
         if king.stalemate(king.square, new_pos):
-            stalemate = True
+            stalemate += king.color
         if king.color == piece.color:
             current_players_king = king
+    if check == '':
+        check = 'False'
+    if checkmate == '':
+        checkmate = 'False'
+    if stalemate == '':
+        stalemate = 'False'
 
     if source and target and piece:
         print('Move:', move_to_an(source, target, old_pos, new_pos, promotion))

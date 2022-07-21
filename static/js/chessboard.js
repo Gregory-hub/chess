@@ -1,4 +1,3 @@
-
 let socket = io(location.host)
 
 import {INPUT_EVENT_TYPE, COLOR, Chessboard, MARKER_TYPE} from "../cm-chessboard/src/cm-chessboard/Chessboard.js"
@@ -7,6 +6,8 @@ import {Chess} from "./Chess.js"
 $(document).ready(function() {
     let fen = $('#fen').text()
     let chess = new Chess(fen)
+    console.log(fen)
+    console.log(chess.fen())
 
     const board = new Chessboard(document.getElementById("board"), {
         position: chess.fen(),
@@ -14,6 +15,7 @@ $(document).ready(function() {
         sprite: {url: "../static/cm-chessboard/assets/images/chessboard-sprite-staunty.svg"},
         style: {moveFromMarker: undefined, moveToMarker: undefined}, // disable standard markers
     })
+    console.log(board)
     board.enableMoveInput(inputHandler)
 
     function inputHandler(event) {
@@ -30,7 +32,7 @@ $(document).ready(function() {
             return moves.length > 0
         } else if (event.type === INPUT_EVENT_TYPE.moveDone) {
             console.log(event)
-            let promotion = ""
+            let promotion = "q"
             const move = {from: event.squareFrom, to: event.squareTo, promotion: promotion}
             console.log(move)
             const result = chess.move(move)

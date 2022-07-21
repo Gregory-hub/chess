@@ -7,7 +7,7 @@ from chess.forms import RegistrationForm, LoginForm, StartGameForm
 from chess.auth import sign_in, sign_up, login_on_registration, get_current_client, create_client, authentication_required
 from chess.models import User, Game
 from chess.connect import get_matched_users, invite_player
-from chess.game import get_game_conf, create_game, get_my_games, move
+from chess.game import get_game_conf, create_browser_game, create_tg_game, get_my_games, move
 from chess.api import add_tg_user
 
 
@@ -88,7 +88,7 @@ def game_config():
         length = int(form['game_time'].data)
         current_player_color = form['player_color'].data
 
-        game = create_game(
+        game = create_browser_game(
             length=length,
             supplement=supplement,
             opponent_username=opponent_username,
@@ -183,11 +183,15 @@ def register_tg_user():
 
 @app.route('/api/start_game', methods=['POST'])
 def start_tg_game():
-    # current_player_user_id = request.form.get("user_id", default=None)
-    # opponents_user_id = request.form.get("opponents_user_id", default=None)
-    # opponents_email = request.form.get("opponents_email", default=None)
-    # opponents_tg_username = request.form.get("opponents_username", default=None)
-    pass
+    current_player_user_id = request.form.get("user_id", default=None)
+    current_player_color = request.form.get("color", default=None)
+    opponent_user_id = request.form.get("opponents_user_id", default=None)
+    opponent_email = request.form.get("opponents_email", default=None)
+    success, message = create_tg_game(opponent_user_id, opponent_email, current_player_user_id, current_player_color)
+    return jsonify(
+        status="OK" if success else "FAIL",
+        message=message
+    )
 
 
 @app.route('/api/move/<an_move>', methods=['GET'])

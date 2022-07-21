@@ -46,12 +46,12 @@ class User(db.Model, UserMixin):
 class Game(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     start_time = db.Column(db.DateTime, nullable=False)
-    game_length = db.Column(db.Interval, nullable=False)
-    supplement = db.Column(db.Interval, nullable=False)
-    fen = db.Column(db.String(100), nullable=False, default='rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 0')
+    game_length = db.Column(db.Interval)
+    supplement = db.Column(db.Interval)
+    fen = db.Column(db.String(100), nullable=False, default='rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1')
     pgn = db.Column(db.String, nullable=False, default='')
     finished = db.Column(db.Boolean, nullable=False, default=False)
-    # telegram_game = db.Column(db.Boolean, nullable=False, default=False)
+    telegram_game = db.Column(db.Boolean, nullable=False, default=False)
 
     players = db.relationship('Player', backref='game')
     moves = db.relationship('Move', backref='game')

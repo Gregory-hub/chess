@@ -43,7 +43,7 @@ def pos_to_fen_pos(pos: list):
 
 def move_to_an(source: Square, target: Square, old_pos: list, new_pos: list, promotion: str):
     """Returns move in algebraic notation format. Assuming move is valid"""
-    piece = copy.deepcopy(new_pos[target.i][target.j])
+    piece = copy.deepcopy(old_pos[source.i][source.j])
     init_square_name = ''
     final_square_name = target.name
     take_sign = ''
@@ -92,8 +92,10 @@ def move_to_an(source: Square, target: Square, old_pos: list, new_pos: list, pro
             if sq.i == source.i and not piece.moved_through_piece(sq, target, old_pos):
                 init_square_name += source.name[1]
 
-    if promotion != '' and isinstance(piece, Pawn):
-        end = '+=' + promotion
+    if promotion != '' and isinstance(piece, Pawn) and (piece.color == 'w' and target.i == 0 or piece.color == 'b' and target.i == 7):
+        promotion = '=' + promotion.upper() if piece.color == 'w' else '=' + promotion.lower()
+    else:
+        promotion = ''
 
     for i in range(8):
         for j in range(8):
@@ -104,4 +106,4 @@ def move_to_an(source: Square, target: Square, old_pos: list, new_pos: list, pro
                 if new_pos[sq.i][sq.j].checkmate(sq, new_pos):
                     end = '#'
 
-    return piece_letter + init_square_name + take_sign + final_square_name + end
+    return piece_letter + init_square_name + take_sign + final_square_name + promotion + end

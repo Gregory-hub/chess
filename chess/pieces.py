@@ -260,7 +260,7 @@ class King(Piece):
 class Queen(Piece):
     letter = 'q'
 
-    def valid_move(self, source: Square, target: Square, pos: list, castling: str):
+    def valid_move(self, source: Square, target: Square, pos: list, castling: str, en_passand_target: str):
         if source is None or target is None:
             return False
 

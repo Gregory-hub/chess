@@ -82,15 +82,20 @@ def move_to_an(source: Square, target: Square, old_pos: list, new_pos: list, pro
         if isinstance(piece, Pawn):
             init_square_name = source.name[0]
 
-    temp_piece = copy.deepcopy(piece)
-    temp_piece.color = 'w' if piece.color == 'b' else 'b'
-    squares = generate_available_squares(new_pos, temp_piece)
-    for sq in squares:
-        if isinstance(old_pos[sq.i][sq.j], type(piece)) and sq != source and not isinstance(piece, Pawn):
-            if sq.j == source.j and not piece.moved_through_piece(sq, target, old_pos):
-                init_square_name += source.name[0]
-            if sq.i == source.i and not piece.moved_through_piece(sq, target, old_pos):
-                init_square_name += source.name[1]
+    if not isinstance(piece, Pawn):
+        temp_piece = copy.deepcopy(new_pos[target.i][target.j])
+        temp_piece.color = 'w' if piece.color == 'b' else 'b'
+        squares = generate_available_squares(new_pos, temp_piece)
+        move_not_unique = False
+        for sq in squares:
+            if isinstance(old_pos[sq.i][sq.j], type(piece)) and sq != source and not piece.moved_through_piece(sq, target, old_pos):
+                move_not_unique = True
+                if sq.i == source.i and (len(init_square_name) == 0 or init_square_name.isdigit()):
+                    init_square_name += source.name[0]
+                if sq.j == source.j and len(init_square_name) < 2 and not init_square_name.isdigit():
+                    init_square_name += source.name[1]
+        if move_not_unique and init_square_name == '':
+            init_square_name += source.name[0]
 
     if promotion != '' and isinstance(piece, Pawn) and (piece.color == 'w' and target.i == 0 or piece.color == 'b' and target.i == 7):
         promotion = '=' + promotion.upper() if piece.color == 'w' else '=' + promotion.lower()

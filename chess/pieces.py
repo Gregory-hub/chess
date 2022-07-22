@@ -441,7 +441,7 @@ def generate_available_squares(pos: list, piece: Piece):
     if isinstance(piece, Knight):
         squares.extend(knight_squares(pos, piece))
     if isinstance(piece, Pawn):
-        squares.extend(Pawn_squares(pos, piece))
+        squares.extend(pawn_squares(pos, piece))
     if isinstance(piece, King):
         squares.extend(king_squares(pos, piece))
 
@@ -607,7 +607,7 @@ def knight_squares(pos: list, piece: Knight):
 
 
 # TODO: add en passand squares
-def Pawn_squares(pos: list, piece: Pawn):
+def pawn_squares(pos: list, piece: Pawn):
     """does not include squares in front of Pawn"""
     squares = []
 

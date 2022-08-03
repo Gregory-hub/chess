@@ -162,11 +162,15 @@ class King(Piece):
         elif target.i < evil_target.i and target.j > evil_target.j:
             squares_to_check = [Square(target.i + i, target.j - i) for i in range(1, evil_target.i - target.i)]
         elif target.i > evil_target.i and target.j < evil_target.j:
-            squares_to_check = [Square(target.i - i, target.j + i) for i in range(1, evil_target.i - target.i)]
+            squares_to_check = [Square(target.i - i, target.j + i) for i in range(1, target.i - evil_target.i)]
         elif target.i > evil_target.i and target.j > evil_target.j:
-            squares_to_check = [Square(target.i - i, target.j - i) for i in range(1, evil_target.i - target.i)]
+            squares_to_check = [Square(target.i - i, target.j - i) for i in range(1, target.i - evil_target.i)]
+
+        print(squares_to_check)
 
         for sq in squares_to_check:
+            print(sq)
+            print(self.__pieces_attacking_sq(sq, pos))
             for piece in self.__pieces_attacking_sq(sq, pos):
                 if piece.color != evil_piece.color and not isinstance(piece, King):
                     return True

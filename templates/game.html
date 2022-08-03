@@ -10,10 +10,30 @@
 
     <div class="row mt-3">
         <div class="col-lg-7">
-            <div class="chessboard" id="board"></div>
-            <div id="fen" class="hidden">{{ fen }}</div>
+
+            <div id="overlay" class="overlay active">
+                <div class="chessboard" id="board"></div>
+                <div id="fen" class="hidden">{{ fen }}</div>
+
+                <div id="modal" class="promotion_modal active">
+                    {% if current_player.color == 'b' %}
+                        <div class="sq sq-q"><img class="piece-img" src="{{ url_for('static', filename='img/BQ.jpg') }}" alt="Q"></div>
+                        <div class="sq sq-r"><img class="piece-img" src="{{ url_for('static', filename='img/BR.jpg') }}" alt="R"></div>
+                        <div class="sq sq-b"><img class="piece-img" src="{{ url_for('static', filename='img/BB.jpg') }}" alt="B"></div>
+                        <div class="sq sq-k"><img class="piece-img" src="{{ url_for('static', filename='img/BN.jpg') }}" alt="N"></div>
+                    {% else %}
+                        <div class="sq sq-q"><img class="piece-img" src="{{ url_for('static', filename='img/WQ.jpg') }}" alt="Q"></div>
+                        <div class="sq sq-r"><img class="piece-img" src="{{ url_for('static', filename='img/WR.jpg') }}" alt="R"></div>
+                        <div class="sq sq-b"><img class="piece-img" src="{{ url_for('static', filename='img/WB.jpg') }}" alt="B"></div>
+                        <div class="sq sq-k"><img class="piece-img" src="{{ url_for('static', filename='img/WN.jpg') }}" alt="N"></div>
+                    {% endif %}
+                </div>
+            </div>
+
         </div>
+
         <div class="col-lg-5">
+
             <div class="row h-100">
                 <div class="col-lg-12 col-6">
                     <div class="row mt-1">

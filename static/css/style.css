@@ -133,4 +133,38 @@ body {
     display: none;
 }
 
-/* chessboard */
+
+
+/* .col-lg-5 {
+    border: 1px solid black;
+}
+.col-lg-7 {
+    border: 1px solid black;
+} */
+
+
+
+/* modal */
+.promotion_modal {
+    /* border: 1px solid black; */
+    width: 12.5%;
+    position: absolute;
+    top: 0;
+    left: 0;        /* moves using this */
+    z-index: 10;
+    /* transform: scale(0); */
+}
+
+.overlay {
+    /* border: 1px solid black; */
+    position: relative;
+}
+
+.sq-q {
+    border-bottom: 1px solid #0a020265;
+}
+
+.piece-img {
+    max-width: 100%;
+    max-height: auto;
+}

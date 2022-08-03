@@ -1,6 +1,6 @@
 let socket = io(location.host)
 
-import {INPUT_EVENT_TYPE, COLOR, Chessboard, MARKER_TYPE} from "../cm-chessboard/src/cm-chessboard/Chessboard.js"
+import {INPUT_EVENT_TYPE, COLOR, Chessboard, MARKER_TYPE, PIECE} from "../cm-chessboard/src/cm-chessboard/Chessboard.js"
 import {Chess} from "./Chess.js"
 
 $(document).ready(function() {
@@ -29,20 +29,27 @@ $(document).ready(function() {
             for (const move of moves) {
                 event.chessboard.addMarker(move.to, MARKER_TYPE.dot)
             }
-            return moves.length > 0
+            return true// moves.length > 0
         } else if (event.type === INPUT_EVENT_TYPE.moveDone) {
             console.log(event)
-            let promotion = "q"
+            let promotion = ''
+            let target = event.squareTo
+            if (target[1] == 8) {
+                const modal = document.getElementById('modal')
+                openModal(modal)
+                console.log('AAAAAAA modal open:', modal, modal.classList)
+            }
+
             const move = {from: event.squareFrom, to: event.squareTo, promotion: promotion}
             console.log(move)
             const result = chess.move(move)
-            if (result) {
+            // if (result) {
                 send_fen(chess.fen(), promotion)
-                event.chessboard.removeMarkers(undefined, MARKER_TYPE.square)
-            } else {
-                console.warn("invalid move", move)
-            }
-            return result
+                // event.chessboard.removeMarkers(undefined, MARKER_TYPE.square)
+            // } else {
+                // console.warn("invalid move", move)
+            // }
+            return true //result
         }
     }
 
@@ -59,4 +66,30 @@ $(document).ready(function() {
         console.log("Status: ", move_status)
         console.log("Fen: ", fen)
     })
+
+    const promoion_modal = document.querySelector('.promotion_modal')
+    const overlay = document.getElementById('overlay')
+
+    promoion_modal.addEventListener('click', () => {
+        closeModal(promoion_modal)
+    })
+
+    overlay.addEventListener('click', () => {
+        const modals = document.querySelectorAll('.modal.active')
+        modals.forEach(modal => {
+            closeModal(modal)
+        })
+    })
+
+    function openModal(modal) {
+        if (modal == null) return
+        modal.classList.add('active')
+        overlay.classList.add('active')
+    }
+
+    function closeModal(modal) {
+        if (modal == null) return
+        modal.classList.remove('active')
+        overlay.classList.remove('active')
+    }
 })

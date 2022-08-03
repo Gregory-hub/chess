@@ -1,11 +1,12 @@
 1. move is legal
     a. color is valid +
-    b. position did change +
+    b. color matches player
     c. only one piece moved +
     d. piece moved to a valid square(individually for different piece types) +
     e. piece didn't move through another one(except knights) +
     f. piece stands on another one's square(both colors) +
     g. position after move is not check for active player +
+    h. position did change +
 2. check +
 3. checkmate +
 4. stalemate +

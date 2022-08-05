@@ -133,38 +133,43 @@ body {
     display: none;
 }
 
-
-
-/* .col-lg-5 {
-    border: 1px solid black;
-}
-.col-lg-7 {
-    border: 1px solid black;
-} */
-
-
-
 /* modal */
-.promotion_modal {
-    /* border: 1px solid black; */
-    width: 12.5%;
-    position: absolute;
-    top: 0;
-    left: 0;        /* moves using this */
-    z-index: 10;
-    /* transform: scale(0); */
-}
-
-.overlay {
-    /* border: 1px solid black; */
+.chessbox {
     position: relative;
 }
 
-.sq-q {
-    border-bottom: 1px solid #0a020265;
+.promotion_modal {
+    border-bottom: 1px solid rgba(0, 0, 0, 0.5);
+    width: 12.5%;
+    position: absolute;
+    top: 0;
+    left: 0;        /* moves using this (row number * 12.5%)*/
+    z-index: 10;
+    transform: scale(0);
+}
+
+.promotion_modal.active {
+    transform: scale(1);
+}
+
+.overlay {
+    position: relative;
+    opacity: 1;
+    transition: 200ms ease-in-out;
+}
+
+.overlay.active {
+    opacity: .75;
+    pointer-events: all;
 }
 
 .piece-img {
     max-width: 100%;
     max-height: auto;
+}
+
+.promotion-button {
+	border: none;
+	padding: 0;
+	outline: inherit;
 }

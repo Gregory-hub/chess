@@ -11,21 +11,55 @@
     <div class="row mt-3">
         <div class="col-lg-7">
 
-            <div id="overlay" class="overlay active">
-                <div class="chessboard" id="board"></div>
-                <div id="fen" class="hidden">{{ fen }}</div>
+            <div class="chessbox">
+                <div id="overlay" class="overlay">
+                    <div class="chessboard" id="board"></div>
+                    <div id="fen" class="hidden">{{ fen }}</div>
+                </div>
 
-                <div id="modal" class="promotion_modal active">
+                <div id="modal" class="promotion_modal">
                     {% if current_player.color == 'b' %}
-                        <div class="sq sq-q"><img class="piece-img" src="{{ url_for('static', filename='img/BQ.jpg') }}" alt="Q"></div>
-                        <div class="sq sq-r"><img class="piece-img" src="{{ url_for('static', filename='img/BR.jpg') }}" alt="R"></div>
-                        <div class="sq sq-b"><img class="piece-img" src="{{ url_for('static', filename='img/BB.jpg') }}" alt="B"></div>
-                        <div class="sq sq-k"><img class="piece-img" src="{{ url_for('static', filename='img/BN.jpg') }}" alt="N"></div>
+                        <div class="sq sq-q">
+                            <button class="promotion-button" id="sq-q">
+                                <img class="piece-img" src="{{ url_for('static', filename='img/BQ.jpg') }}" alt="Q" draggable="false">
+                            </button>
+                        </div>
+                        <div class="sq sq-r">
+                            <button class="promotion-button" id="sq-r">
+                                <img class="piece-img" src="{{ url_for('static', filename='img/BR.jpg') }}" alt="R" draggable="false">
+                            </button>
+                        </div>
+                        <div class="sq sq-b">
+                            <button class="promotion-button" id="sq-b">
+                                <img class="piece-img" src="{{ url_for('static', filename='img/BB.jpg') }}" alt="B" draggable="false">
+                            </button>
+                        </div>
+                        <div class="sq sq-n">
+                            <button class="promotion-button" id="sq-n">
+                                <img class="piece-img" src="{{ url_for('static', filename='img/BN.jpg') }}" alt="N" draggable="false">
+                            </button>
+                        </div>
                     {% else %}
-                        <div class="sq sq-q"><img class="piece-img" src="{{ url_for('static', filename='img/WQ.jpg') }}" alt="Q"></div>
-                        <div class="sq sq-r"><img class="piece-img" src="{{ url_for('static', filename='img/WR.jpg') }}" alt="R"></div>
-                        <div class="sq sq-b"><img class="piece-img" src="{{ url_for('static', filename='img/WB.jpg') }}" alt="B"></div>
-                        <div class="sq sq-k"><img class="piece-img" src="{{ url_for('static', filename='img/WN.jpg') }}" alt="N"></div>
+                        <div class="sq sq-q">
+                            <button class="promotion-button" id="sq-q">
+                                <img class="piece-img" src="{{ url_for('static', filename='img/WQ.jpg') }}" alt="Q" draggable="false">
+                            </button>
+                        </div>
+                        <div class="sq sq-r">
+                            <button class="promotion-button" id="sq-r">
+                                <img class="piece-img" src="{{ url_for('static', filename='img/WR.jpg') }}" alt="R" draggable="false">
+                            </button>
+                        </div>
+                        <div class="sq sq-b">
+                            <button class="promotion-button" id="sq-b">
+                                <img class="piece-img" src="{{ url_for('static', filename='img/WB.jpg') }}" alt="B" draggable="false">
+                            </button>
+                        </div>
+                        <div class="sq sq-n">
+                            <button class="promotion-button" id="sq-n">
+                                <img class="piece-img" src="{{ url_for('static', filename='img/WN.jpg') }}" alt="N" draggable="false">
+                            </button>
+                        </div>
                     {% endif %}
                 </div>
             </div>

@@ -6,8 +6,8 @@ import {Chess} from "./Chess.js"
 $(document).ready(function() {
     let fen = $('#fen').text()
     let chess = new Chess(fen)
-    console.log(fen)
-    console.log(chess.fen())
+    const promoion_modal = document.querySelector('.promotion_modal')
+    const overlay = document.getElementById('overlay')
 
     const board = new Chessboard(document.getElementById("board"), {
         position: chess.fen(),
@@ -15,33 +15,42 @@ $(document).ready(function() {
         sprite: {url: "../static/cm-chessboard/assets/images/chessboard-sprite-staunty.svg"},
         style: {moveFromMarker: undefined, moveToMarker: undefined}, // disable standard markers
     })
-    console.log(board)
+
+    // move processing
     board.enableMoveInput(inputHandler)
 
     function inputHandler(event) {
-        console.log("event", event)
         event.chessboard.removeMarkers(undefined, MARKER_TYPE.dot)
         event.chessboard.removeMarkers(undefined, MARKER_TYPE.square)
+
         if (event.type === INPUT_EVENT_TYPE.moveStart) {
             const moves = chess.moves({square: event.square, verbose: true});
-            console.log(moves)
             event.chessboard.addMarker(event.square, MARKER_TYPE.square)
             for (const move of moves) {
                 event.chessboard.addMarker(move.to, MARKER_TYPE.dot)
             }
             return true// moves.length > 0
+
         } else if (event.type === INPUT_EVENT_TYPE.moveDone) {
-            console.log(event)
             let promotion = ''
             let target = event.squareTo
-            if (target[1] == 8) {
-                const modal = document.getElementById('modal')
-                openModal(modal)
-                console.log('AAAAAAA modal open:', modal, modal.classList)
-            }
+            let orientation = event.chessboard.getOrientation()
+
+            const moves = chess.moves({square: event.squareFrom, verbose: true});
+            const squares = []
+            moves.forEach(move => {
+                squares.push(move.to)
+            })
+
+            if (squares.includes(event.squareTo)) {
+                if (target[1] == 8 && orientation == 'w' || target[1] == 1 && orientation == 'b') {
+                    const modal = document.getElementById('modal')
+                    openModal(modal, target)
+                    return false
+                }
+            } else return false
 
             const move = {from: event.squareFrom, to: event.squareTo, promotion: promotion}
-            console.log(move)
             const result = chess.move(move)
             // if (result) {
                 send_fen(chess.fen(), promotion)
@@ -53,6 +62,7 @@ $(document).ready(function() {
         }
     }
 
+    // server communication
     function send_fen(fen, promotion) {
         let fen_pos = fen.split(' ')[0]
         socket.emit('fen_pos', fen_pos, promotion)
@@ -63,33 +73,60 @@ $(document).ready(function() {
         let fen = data["fen"]
         chess = Chess(fen)
         board.setPosition(fen)
-        console.log("Status: ", move_status)
-        console.log("Fen: ", fen)
     })
 
-    const promoion_modal = document.querySelector('.promotion_modal')
-    const overlay = document.getElementById('overlay')
+    // modal logic
+    function openModal(modal, target) {
+        if (modal == null || target == null) return
 
-    promoion_modal.addEventListener('click', () => {
-        closeModal(promoion_modal)
-    })
-
-    overlay.addEventListener('click', () => {
-        const modals = document.querySelectorAll('.modal.active')
-        modals.forEach(modal => {
-            closeModal(modal)
-        })
-    })
-
-    function openModal(modal) {
-        if (modal == null) return
+        let multiplier = 'abcdefgh'.indexOf(target[0])
+        modal.style.left = String(12.5 * multiplier) + '%'
         modal.classList.add('active')
+
         overlay.classList.add('active')
+        overlay.removeEventListener('click', overlay_click_event)
+        console.log("remove event listener")
+        setTimeout(() => {
+            console.log("timeout. add overlay event listener")
+            overlay.addEventListener('click', overlay_click_event)
+        }, 100)
+
+        console.log("modal opened")
     }
 
     function closeModal(modal) {
         if (modal == null) return
         modal.classList.remove('active')
         overlay.classList.remove('active')
+        console.log("modal closed")
     }
+
+    promoion_modal.addEventListener('click', () => {
+        console.log("modal clicked")
+        closeModal(promoion_modal)
+    })
+
+    overlay.addEventListener('click', overlay_click_event)
+    function overlay_click_event() {
+        console.log("overlay clicked")
+        const modals = document.querySelectorAll('.promotion_modal.active')
+        modals.forEach(modal => {
+            closeModal(modal)
+        })
+    }
+
+    // modal gifs activation and deactivation
+    const buttons = document.querySelectorAll('.promotion-button')
+    buttons.forEach(button => {
+        button.addEventListener('mouseover', () => {
+            const img = button.getElementsByTagName('img')['0']
+            const filename = img.getAttribute('src').split('.').slice(0, -1).join('.') + '.gif'
+            img.setAttribute('src', filename)
+        }, false)
+        button.addEventListener('mouseout', () => {
+            const img = button.getElementsByTagName('img')['0']
+            const filename = img.getAttribute('src').split('.').slice(0, -1).join('.') + '.jpg'
+            img.setAttribute('src', filename)
+        }, false)
+    })
 })

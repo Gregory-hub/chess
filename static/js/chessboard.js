@@ -34,21 +34,23 @@ $(document).ready(function() {
         } else if (event.type === INPUT_EVENT_TYPE.moveDone) {
             let promotion = ''
             let target = event.squareTo
+            let source = event.squareFrom
             let orientation = event.chessboard.getOrientation()
+            let piece = chess.get(source)
 
-            const moves = chess.moves({square: event.squareFrom, verbose: true});
-            const squares = []
-            moves.forEach(move => {
-                squares.push(move.to)
-            })
+            if (piece.type == 'p' && (target[1] == 8 && orientation == 'w' || target[1] == 1 && orientation == 'b')) {
+                const moves = chess.moves({square: event.squareFrom, verbose: true});
+                const squares = []
+                moves.forEach(move => {
+                    squares.push(move.to)
+                })
 
-            if (squares.includes(event.squareTo)) {
-                if (target[1] == 8 && orientation == 'w' || target[1] == 1 && orientation == 'b') {
+                if (squares.includes(event.squareTo) ) {
                     const modal = document.getElementById('modal')
                     openModal(modal, target)
                     return false
-                }
-            } else return false
+                } else return false
+            }
 
             const move = {from: event.squareFrom, to: event.squareTo, promotion: promotion}
             const result = chess.move(move)
@@ -77,10 +79,14 @@ $(document).ready(function() {
 
     // modal logic
     function openModal(modal, target) {
-        if (modal == null || target == null) return
+        if (modal == null  || target == null) return
 
         let multiplier = 'abcdefgh'.indexOf(target[0])
-        modal.style.left = String(12.5 * multiplier) + '%'
+        if (target[1] == 8) {
+            modal.style.left = String(12.5 * multiplier) + '%'
+        } else {
+            modal.style.left = String(87.5 - 12.5 * multiplier) + '%'
+        }
         modal.classList.add('active')
 
         overlay.classList.add('active')

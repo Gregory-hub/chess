@@ -6,7 +6,14 @@ import {Chess} from "./Chess.js"
 $(document).ready(function() {
     let fen = $('#fen').text()
     let chess = new Chess(fen)
+    let target
+    let source
     const promoion_modal = document.querySelector('.promotion_modal')
+    let modal_opened = false
+    const sq_q = document.getElementById('sq-q')
+    const sq_r = document.getElementById('sq-r')
+    const sq_b = document.getElementById('sq-b')
+    const sq_n = document.getElementById('sq-n')
     const overlay = document.getElementById('overlay')
 
     const board = new Chessboard(document.getElementById("board"), {
@@ -29,12 +36,11 @@ $(document).ready(function() {
             for (const move of moves) {
                 event.chessboard.addMarker(move.to, MARKER_TYPE.dot)
             }
-            return true// moves.length > 0
+            return true         // moves.length > 0
 
         } else if (event.type === INPUT_EVENT_TYPE.moveDone) {
-            let promotion = ''
-            let target = event.squareTo
-            let source = event.squareFrom
+            target = event.squareTo
+            source = event.squareFrom
             let orientation = event.chessboard.getOrientation()
             let piece = chess.get(source)
 
@@ -48,14 +54,14 @@ $(document).ready(function() {
                 if (squares.includes(event.squareTo) ) {
                     const modal = document.getElementById('modal')
                     openModal(modal, target)
-                    return false
-                } else return false
+                } 
+                return false
             }
 
-            const move = {from: event.squareFrom, to: event.squareTo, promotion: promotion}
+            const move = {from: event.squareFrom, to: event.squareTo, promotion: ''}
             const result = chess.move(move)
-            // if (result) {
-                send_fen(chess.fen(), promotion)
+            // if (result) {                                                    // FRONTENT MOVE CHECK
+                send_fen(chess.fen(), '')
                 // event.chessboard.removeMarkers(undefined, MARKER_TYPE.square)
             // } else {
                 // console.warn("invalid move", move)
@@ -98,6 +104,13 @@ $(document).ready(function() {
         }, 100)
 
         console.log("modal opened")
+        modal.addEventListener('touchend', modalMouseUp)
+        modal_opened = true
+    }
+
+    function modalMouseUp(modal)
+    {
+        modal.removeEventListener('touchend', modalMouseUp)
     }
 
     function closeModal(modal) {
@@ -105,10 +118,42 @@ $(document).ready(function() {
         modal.classList.remove('active')
         overlay.classList.remove('active')
         console.log("modal closed")
+        modal_opened = false
     }
 
-    promoion_modal.addEventListener('click', () => {
-        console.log("modal clicked")
+    sq_q.addEventListener('click', () => {
+        if (!modal_opened) return
+        console.log("queen clicked")
+        const move = {from: source, to: target, promotion: 'q'}
+        chess.move(move)
+        send_fen(chess.fen(), 'q')
+        closeModal(promoion_modal)
+    })
+
+    sq_r.addEventListener('click', () => {
+        if (!modal_opened) return
+        console.log("rook clicked")
+        const move = {from: source, to: target, promotion: 'r'}
+        chess.move(move)
+        send_fen(chess.fen(), 'r')
+        closeModal(promoion_modal)
+    })
+
+    sq_b.addEventListener('click', () => {
+        if (!modal_opened) return
+        console.log("bishop clicked")
+        const move = {from: source, to: target, promotion: 'b'}
+        chess.move(move)
+        send_fen(chess.fen(), 'b')
+        closeModal(promoion_modal)
+    })
+
+    sq_n.addEventListener('click', () => {
+        if (!modal_opened) return
+        console.log("knight clicked")
+        const move = {from: source, to: target, promotion: 'n'}
+        chess.move(move)
+        send_fen(chess.fen(), 'n')
         closeModal(promoion_modal)
     })
 

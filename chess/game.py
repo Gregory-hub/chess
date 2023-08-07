@@ -107,6 +107,7 @@ def move(game_id: int, new_fen_pos: str, promotion: str):
     old_fen_pos = game.get_fen_pos()
     old_pos = fen_pos_to_pos(old_fen_pos)
     new_pos = fen_pos_to_pos(new_fen_pos)
+
     for i in range(8):
         for j in range(8):
             print(old_pos[i][j].letter if old_pos[i][j] is not None else '*', end=' ')

@@ -4,6 +4,7 @@ import {INPUT_EVENT_TYPE, COLOR, Chessboard, MARKER_TYPE, PIECE} from "../cm-che
 import {Chess} from "./Chess.js"
 
 $(document).ready(function() {
+    let mobile = navigator.userAgent.includes("Mobile")
     let fen = $('#fen').text()
     let chess = new Chess(fen)
     let target
@@ -97,20 +98,24 @@ $(document).ready(function() {
 
         overlay.classList.add('active')
         overlay.removeEventListener('click', overlay_click_event)
-        console.log("remove event listener")
+        console.log("remove click event listener")
         setTimeout(() => {
-            console.log("timeout. add overlay event listener")
+            console.log("add overlay event listener")
             overlay.addEventListener('click', overlay_click_event)
         }, 100)
 
-        console.log("modal opened")
-        modal.addEventListener('touchend', modalMouseUp)
         modal_opened = true
-    }
+        console.log("modal opened")
 
-    function modalMouseUp(modal)
-    {
-        modal.removeEventListener('touchend', modalMouseUp)
+        if (mobile) {
+            modal.addEventListener('touchend', addSquareClickEvents)
+            console.log("Mobile. Add touchend event listener")
+        } else 
+        {
+            addSquareClickEvents();
+            console.log("Not mobile. Do not add touchend event listener")
+        }
+        // modal.addEventListener('mouseup', addSquareClickEvents)
     }
 
     function closeModal(modal) {
@@ -119,45 +124,65 @@ $(document).ready(function() {
         overlay.classList.remove('active')
         console.log("modal closed")
         modal_opened = false
+        removeSquareClickEvents()
     }
 
-    sq_q.addEventListener('click', () => {
+    function addSquareClickEvents() {
+        modal.removeEventListener('touchend', addSquareClickEvents)
+        // modal.removeEventListener('mouseup', addSquareClickEvents)
+
+        sq_q.addEventListener('click', queenClicked)
+        sq_r.addEventListener('click', rookClicked)
+        sq_b.addEventListener('click', bishopClicked)
+        sq_n.addEventListener('click', knightClicked)
+        console.log("add square click event listeners")
+    }
+
+    function removeSquareClickEvents() {
+        sq_q.removeEventListener('click', queenClicked)
+        sq_r.removeEventListener('click', rookClicked)
+        sq_b.removeEventListener('click', bishopClicked)
+        sq_n.removeEventListener('click', knightClicked)
+    }
+
+    function queenClicked() {
         if (!modal_opened) return
         console.log("queen clicked")
         const move = {from: source, to: target, promotion: 'q'}
         chess.move(move)
         send_fen(chess.fen(), 'q')
         closeModal(promoion_modal)
-    })
+    }
 
-    sq_r.addEventListener('click', () => {
+    function rookClicked() {
         if (!modal_opened) return
         console.log("rook clicked")
         const move = {from: source, to: target, promotion: 'r'}
         chess.move(move)
         send_fen(chess.fen(), 'r')
         closeModal(promoion_modal)
-    })
+    }
 
-    sq_b.addEventListener('click', () => {
+    function bishopClicked() {
         if (!modal_opened) return
         console.log("bishop clicked")
         const move = {from: source, to: target, promotion: 'b'}
         chess.move(move)
         send_fen(chess.fen(), 'b')
         closeModal(promoion_modal)
-    })
+    }
 
-    sq_n.addEventListener('click', () => {
+    function knightClicked() {
         if (!modal_opened) return
         console.log("knight clicked")
         const move = {from: source, to: target, promotion: 'n'}
         chess.move(move)
         send_fen(chess.fen(), 'n')
         closeModal(promoion_modal)
-    })
+    }
 
     overlay.addEventListener('click', overlay_click_event)
+
     function overlay_click_event() {
         console.log("overlay clicked")
         const modals = document.querySelectorAll('.promotion_modal.active')
